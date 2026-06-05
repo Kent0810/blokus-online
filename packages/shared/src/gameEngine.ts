@@ -5,14 +5,14 @@ const EDGE_DIRECTIONS = [
   [-1, 0],
   [1, 0],
   [0, -1],
-  [0, 1]
+  [0, 1],
 ] as const;
 
 const CORNER_DIRECTIONS = [
   [-1, -1],
   [-1, 1],
   [1, -1],
-  [1, 1]
+  [1, 1],
 ] as const;
 
 const cloneBoard = (board: Board): Board => board.map((row) => [...row]);
@@ -54,7 +54,11 @@ const normalizeCells = (cells: [number, number][]): [number, number][] => {
 };
 
 const getSkippedPlayersSet = (gameState: GameState): Set<string> =>
-  new Set(Array.isArray(gameState.skippedPlayers) ? gameState.skippedPlayers : Array.from(gameState.skippedPlayers));
+  new Set(
+    Array.isArray(gameState.skippedPlayers)
+      ? gameState.skippedPlayers
+      : Array.from(gameState.skippedPlayers),
+  );
 
 function getBoardConfig(players: Player[]): {
   boardSize: number;
@@ -65,10 +69,15 @@ function getBoardConfig(players: Player[]): {
 
   if (n === 2) {
     // 14×14 square — players start at opposite diagonal corners
-    const corners: [number, number][] = [[0, 0], [13, 13]];
+    const corners: [number, number][] = [
+      [0, 0],
+      [13, 13],
+    ];
     return {
       boardSize: 14,
-      startingCorners: Object.fromEntries(players.map((p, i) => [p.color, corners[i]])) as Partial<Record<PlayerColor, [number, number]>>,
+      startingCorners: Object.fromEntries(players.map((p, i) => [p.color, corners[i]])) as Partial<
+        Record<PlayerColor, [number, number]>
+      >,
       buildCell: () => null,
     };
   }
@@ -84,26 +93,35 @@ function getBoardConfig(players: Player[]): {
     //           bottom (24,12), bottom-left (18,0), top-left (6,0)
     // Player starting corners (every-other vertex, equidistant):
     //   blue → (0,12) top, yellow → (18,24) bottom-right, red → (18,0) bottom-left
-    const corners: [number, number][] = [[0, 12], [18, 24], [18, 0]];
+    const corners: [number, number][] = [
+      [0, 12],
+      [18, 24],
+      [18, 0],
+    ];
     return {
       boardSize: 25,
-      startingCorners: Object.fromEntries(players.map((p, i) => [p.color, corners[i]])) as Partial<Record<PlayerColor, [number, number]>>,
-      buildCell: (row, col) => (
-        col - 2 * row > 12 ||
-        col + 2 * row > 60 ||
-        2 * row - col > 36 ||
-        col + 2 * row < 12
+      startingCorners: Object.fromEntries(players.map((p, i) => [p.color, corners[i]])) as Partial<
+        Record<PlayerColor, [number, number]>
+      >,
+      buildCell: (row, col) =>
+        col - 2 * row > 12 || col + 2 * row > 60 || 2 * row - col > 36 || col + 2 * row < 12
           ? 'blocked'
-          : null
-      ),
+          : null,
     };
   }
 
   // 4 players — standard 20×20 square
-  const corners: [number, number][] = [[0, 0], [0, 19], [19, 19], [19, 0]];
+  const corners: [number, number][] = [
+    [0, 0],
+    [0, 19],
+    [19, 19],
+    [19, 0],
+  ];
   return {
     boardSize: 20,
-    startingCorners: Object.fromEntries(players.map((p, i) => [p.color, corners[i]])) as Partial<Record<PlayerColor, [number, number]>>,
+    startingCorners: Object.fromEntries(players.map((p, i) => [p.color, corners[i]])) as Partial<
+      Record<PlayerColor, [number, number]>
+    >,
     buildCell: () => null,
   };
 }
@@ -123,7 +141,11 @@ export function flipPiece(cells: [number, number][]): [number, number][] {
   return normalizeCells(cells.map(([row, col]) => [row, maxCol - col] as [number, number]));
 }
 
-export function getTransformedCells(pieceId: string, rotation: 0 | 1 | 2 | 3, flipped: boolean): [number, number][] {
+export function getTransformedCells(
+  pieceId: string,
+  rotation: 0 | 1 | 2 | 3,
+  flipped: boolean,
+): [number, number][] {
   const piece = PIECE_SHAPES[pieceId];
   if (!piece) {
     throw new Error(`Unknown piece: ${pieceId}`);
@@ -133,7 +155,11 @@ export function getTransformedCells(pieceId: string, rotation: 0 | 1 | 2 | 3, fl
   return rotatePiece(flippedCells, rotation);
 }
 
-export function getAbsoluteCells(cells: [number, number][], row: number, col: number): [number, number][] {
+export function getAbsoluteCells(
+  cells: [number, number][],
+  row: number,
+  col: number,
+): [number, number][] {
   return cells.map(([cellRow, cellCol]) => [cellRow + row, cellCol + col]);
 }
 
@@ -147,13 +173,21 @@ export function hasOverlap(cells: [number, number][], board: Board): boolean {
 
 export function hasEdgeTouch(cells: [number, number][], board: Board, color: PlayerColor): boolean {
   return cells.some(([row, col]) =>
-    EDGE_DIRECTIONS.some(([rowDelta, colDelta]) => board[row + rowDelta]?.[col + colDelta] === color)
+    EDGE_DIRECTIONS.some(
+      ([rowDelta, colDelta]) => board[row + rowDelta]?.[col + colDelta] === color,
+    ),
   );
 }
 
-export function hasCornerTouch(cells: [number, number][], board: Board, color: PlayerColor): boolean {
+export function hasCornerTouch(
+  cells: [number, number][],
+  board: Board,
+  color: PlayerColor,
+): boolean {
   return cells.some(([row, col]) =>
-    CORNER_DIRECTIONS.some(([rowDelta, colDelta]) => board[row + rowDelta]?.[col + colDelta] === color)
+    CORNER_DIRECTIONS.some(
+      ([rowDelta, colDelta]) => board[row + rowDelta]?.[col + colDelta] === color,
+    ),
   );
 }
 
@@ -171,7 +205,10 @@ export function isFirstMove(player: Player): boolean {
   return player.remainingPieces.length === PIECE_IDS.length;
 }
 
-export function validateMove(move: GameMove, gameState: GameState): { valid: boolean; error?: string } {
+export function validateMove(
+  move: GameMove,
+  gameState: GameState,
+): { valid: boolean; error?: string } {
   if (gameState.status !== 'in_progress') {
     return { valid: false, error: 'Game is not in progress.' };
   }
@@ -279,7 +316,9 @@ export function hasAnyLegalMove(player: Player, gameState: GameState): boolean {
   }
 
   const boardSize = gameState.board.length;
-  for (const pieceId of [...player.remainingPieces].sort((left, right) => PIECE_SHAPES[right].length - PIECE_SHAPES[left].length)) {
+  for (const pieceId of [...player.remainingPieces].sort(
+    (left, right) => PIECE_SHAPES[right].length - PIECE_SHAPES[left].length,
+  )) {
     for (const flipped of [false, true] as const) {
       for (const rotation of [0, 1, 2, 3] as const) {
         const cells = getTransformedCells(pieceId, rotation, flipped);
@@ -295,12 +334,12 @@ export function hasAnyLegalMove(player: Player, gameState: GameState): boolean {
                 rotation,
                 flipped,
                 row,
-                col
+                col,
               },
               {
                 ...gameState,
-                currentPlayerIndex: gameState.players.findIndex((entry) => entry.id === player.id)
-              }
+                currentPlayerIndex: gameState.players.findIndex((entry) => entry.id === player.id),
+              },
             );
             if (result.valid) {
               return true;
@@ -320,7 +359,7 @@ export function calculateScores(gameState: GameState): GameState {
     score: PIECE_IDS.reduce((score, pieceId) => {
       const used = !player.remainingPieces.includes(pieceId);
       return used ? score + PIECE_SHAPES[pieceId].length : score;
-    }, 0)
+    }, 0),
   }));
 
   const winners = [...players]
@@ -330,7 +369,7 @@ export function calculateScores(gameState: GameState): GameState {
   return {
     ...gameState,
     players,
-    winners
+    winners,
   };
 }
 
@@ -348,7 +387,7 @@ export function calculateNextTurn(gameState: GameState): GameState {
         ...gameState,
         currentPlayerIndex: nextIndex,
         turnTimeRemaining: gameState.turnTimeLimit,
-        skippedPlayers: Array.from(skippedPlayers)
+        skippedPlayers: Array.from(skippedPlayers),
       };
     }
 
@@ -358,7 +397,7 @@ export function calculateNextTurn(gameState: GameState): GameState {
   const scoredState = calculateScores({
     ...gameState,
     status: 'finished',
-    skippedPlayers: Array.from(skippedPlayers)
+    skippedPlayers: Array.from(skippedPlayers),
   });
 
   return scoredState;
@@ -368,7 +407,7 @@ export function initializeGame(players: Player[], turnTimeLimit: number): GameSt
   const { boardSize, startingCorners, buildCell } = getBoardConfig(players);
 
   const board: Board = Array.from({ length: boardSize }, (_, row) =>
-    Array.from({ length: boardSize }, (_, col) => buildCell(row, col))
+    Array.from({ length: boardSize }, (_, col) => buildCell(row, col)),
   );
 
   const powerUpCount = players.length === 2 ? 4 : 6;
@@ -381,7 +420,7 @@ export function initializeGame(players: Player[], turnTimeLimit: number): GameSt
       remainingPieces: [...PIECE_IDS],
       score: 0,
       connected: player.connected ?? true,
-      isBot: player.isBot ?? false
+      isBot: player.isBot ?? false,
     })),
     currentPlayerIndex: 0,
     turnNumber: 1,

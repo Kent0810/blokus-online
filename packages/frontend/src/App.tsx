@@ -11,16 +11,20 @@ function ConnectionBanner() {
   const { connectionState, gameMode, phase } = useAppStore();
 
   // Only relevant when user is supposed to be connected online
-  const onlinePhase = gameMode === 'online' && (
-    phase === 'matchmaking' || phase === 'lobby' || phase === 'game' || phase === 'game_over'
-  );
+  const onlinePhase =
+    gameMode === 'online' &&
+    (phase === 'matchmaking' || phase === 'lobby' || phase === 'game' || phase === 'game_over');
   if (!onlinePhase || connectionState === 'connected') return null;
 
   return (
-    <div className={`fixed top-0 left-0 right-0 z-50 text-center text-sm font-medium py-2 ${
-      connectionState === 'reconnecting' ? 'bg-yellow-600 text-white' : 'bg-red-700 text-white'
-    }`}>
-      {connectionState === 'reconnecting' ? '⟳ Reconnecting...' : '✕ Disconnected — trying to reconnect...'}
+    <div
+      className={`fixed top-0 left-0 right-0 z-50 text-center text-sm font-medium py-2 ${
+        connectionState === 'reconnecting' ? 'bg-yellow-600 text-white' : 'bg-red-700 text-white'
+      }`}
+    >
+      {connectionState === 'reconnecting'
+        ? '⟳ Reconnecting...'
+        : '✕ Disconnected — trying to reconnect...'}
     </div>
   );
 }

@@ -24,7 +24,14 @@ export function useHoverPreview(gameState: GameState | null, playerId: string) {
     const absolute = getAbsoluteCells(cells, hoverCell[0], hoverCell[1]);
 
     const result = validateMove(
-      { playerId, pieceId: selectedPieceId, rotation, flipped, row: hoverCell[0], col: hoverCell[1] },
+      {
+        playerId,
+        pieceId: selectedPieceId,
+        rotation,
+        flipped,
+        row: hoverCell[0],
+        col: hoverCell[1],
+      },
       gameState,
     );
 

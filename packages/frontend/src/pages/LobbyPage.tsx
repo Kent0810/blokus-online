@@ -17,7 +17,8 @@ export function LobbyPage() {
   }
 
   const isReady = room.readyPlayerIds.includes(playerId);
-  const allReady = players.length === room.maxPlayers && players.every((p) => room.readyPlayerIds.includes(p.id));
+  const allReady =
+    players.length === room.maxPlayers && players.every((p) => room.readyPlayerIds.includes(p.id));
   const slots = Array.from({ length: room.maxPlayers });
 
   function handleReady() {

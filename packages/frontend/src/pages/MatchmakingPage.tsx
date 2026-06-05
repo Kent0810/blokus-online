@@ -31,7 +31,8 @@ export function MatchmakingPage() {
         <div className="text-center">
           <h2 className="text-2xl font-bold text-white">Finding a match...</h2>
           <p className="text-slate-400 mt-1">
-            Hey <span className="text-white font-semibold">{playerName}</span>, looking for opponents
+            Hey <span className="text-white font-semibold">{playerName}</span>, looking for
+            opponents
           </p>
         </div>
 

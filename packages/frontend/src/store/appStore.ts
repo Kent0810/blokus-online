@@ -1,6 +1,12 @@
 import { create } from 'zustand';
 import type { ChatMessage, GameState, GameMove, Player, Room } from '@blockus/shared';
-import { applyMove, calculateNextTurn, calculateScores, initializeGame, PIECE_IDS } from '@blockus/shared';
+import {
+  applyMove,
+  calculateNextTurn,
+  calculateScores,
+  initializeGame,
+  PIECE_IDS,
+} from '@blockus/shared';
 import type { GameEndPayload } from '@blockus/shared';
 
 export type AppPhase = 'landing' | 'local_setup' | 'matchmaking' | 'lobby' | 'game' | 'game_over';
@@ -62,7 +68,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   setPlayer: (name, id) => set({ playerName: name, playerId: id }),
 
-  setMatchFound: (roomId, code, playerId) => set({ roomId, roomCode: code, phase: 'lobby', playerId }),
+  setMatchFound: (roomId, code, playerId) =>
+    set({ roomId, roomCode: code, phase: 'lobby', playerId }),
 
   setRoom: (room, players) =>
     set({
@@ -74,8 +81,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   setGameState: (gameState) => set({ gameState, phase: 'game' }),
 
-  setGameEnd: (gameState, rankings) =>
-    set({ gameState, rankings, phase: 'game_over' }),
+  setGameEnd: (gameState, rankings) => set({ gameState, rankings, phase: 'game_over' }),
 
   setConnectionState: (connectionState) => set({ connectionState }),
 
@@ -130,7 +136,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
   localRematch: () => {
     const { players } = get();
     if (!players.length) return;
-    get().setupLocalGame(players.map((p) => p.name), 0);
+    get().setupLocalGame(
+      players.map((p) => p.name),
+      0,
+    );
   },
 
   resetToLanding: () => set({ ...initialState }),

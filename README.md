@@ -57,19 +57,6 @@ Open **http://localhost:5173** in your browser.
 3. Set player names (2–4 players) and optional turn timer
 4. Pass the device between players each turn
 
-### Online — same network (LAN)
-
-1. Start the app with `npm run dev`
-2. Find your local IP:
-   ```bash
-   ipconfig getifaddr en0   # macOS
-   hostname -I              # Linux
-   ```
-3. Host opens **http://localhost:5173**  
-   Other players on the same Wi-Fi open **http://YOUR_IP:5173**
-4. One player clicks **Create Room**, shares the 6-letter code  
-   Others click **Join with Code**
-
 ### Online — over the internet (tunnel)
 
 ```bash

@@ -23,7 +23,8 @@ const cornerDot: Record<string, string> = {
   green: 'ring-green-400',
 };
 
-function cellSize(boardSize: number): number {
+function computeCellSize(boardSize: number, maxWidth?: number): number {
+  if (maxWidth) return Math.max(14, Math.floor((maxWidth - 4) / boardSize));
   if (boardSize <= 14) return 32;
   if (boardSize <= 21) return 28;
   return 26;
@@ -39,6 +40,7 @@ interface BoardProps {
   activePlayers: string[];
   onPlace: (row: number, col: number) => void;
   disabled: boolean;
+  maxWidth?: number;
 }
 
 interface CellProps {
@@ -102,12 +104,19 @@ const Cell = React.memo(function Cell({
     >
       {hasPowerUp && !color && !isGhost && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <span className="text-amber-400 leading-none animate-pulse select-none" style={{ fontSize: size * 0.45 }}>★</span>
+          <span
+            className="text-amber-400 leading-none animate-pulse select-none"
+            style={{ fontSize: size * 0.45 }}
+          >
+            ★
+          </span>
         </div>
       )}
       {cornerColor && !color && !isGhost && !hasPowerUp && (
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className={`w-2 h-2 rounded-full ring-2 ${cornerDot[cornerColor]} ring-offset-1 ring-offset-transparent`} />
+          <div
+            className={`w-2 h-2 rounded-full ring-2 ${cornerDot[cornerColor]} ring-offset-1 ring-offset-transparent`}
+          />
         </div>
       )}
     </div>
@@ -124,10 +133,11 @@ export const Board = React.memo(function Board({
   activePlayers,
   onPlace,
   disabled,
+  maxWidth,
 }: BoardProps) {
   const { setHoverCell, selectedPieceId } = useGameUIStore();
   const boardSize = board.length;
-  const size = cellSize(boardSize);
+  const size = computeCellSize(boardSize, maxWidth);
 
   const previewSet = useRef<Set<string>>(new Set());
   if (previewCells) {
@@ -147,7 +157,8 @@ export const Board = React.memo(function Board({
   powerUpSet.current = new Set(powerUpCells.map(([r, c]) => `${r},${c}`));
 
   // Square boards have no blocked cells; shaped boards use transparent blocked cells for visual outline.
-  const isShaped = board[0]?.[0] === 'blocked' || board[boardSize - 1]?.[boardSize - 1] === 'blocked';
+  const isShaped =
+    board[0]?.[0] === 'blocked' || board[boardSize - 1]?.[boardSize - 1] === 'blocked';
 
   const handleMouseEnter = useCallback(
     (row: number, col: number) => {

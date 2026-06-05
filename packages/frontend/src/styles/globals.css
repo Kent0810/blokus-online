@@ -35,6 +35,7 @@ body {
 
 /* Board cell animations */
 .board-cell {
+  touch-action: manipulation;
   transition: background-color var(--animation-fast) ease,
               transform var(--animation-fast) ease,
               box-shadow var(--animation-fast) ease;
@@ -160,4 +161,9 @@ body {
 /* Disable text selection on game board */
 .game-board {
   user-select: none;
+}
+
+/* Safe area padding for mobile notch/home bar */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }

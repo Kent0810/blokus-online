@@ -39,7 +39,9 @@ export function PlayerSlot({ player, index, isReady, isYou }: PlayerSlotProps) {
         isReady ? 'border-green-500/60 shadow-sm shadow-green-900/20' : 'border-slate-700'
       }`}
     >
-      <div className={`w-10 h-10 rounded-lg border-2 ${colorClass} flex items-center justify-center font-bold text-white text-lg`}>
+      <div
+        className={`w-10 h-10 rounded-lg border-2 ${colorClass} flex items-center justify-center font-bold text-white text-lg`}
+      >
         {player.name.charAt(0).toUpperCase()}
       </div>
       <div className="flex-1 min-w-0">
@@ -56,13 +58,19 @@ export function PlayerSlot({ player, index, isReady, isYou }: PlayerSlotProps) {
             </span>
           )}
         </div>
-        <p className="text-slate-500 text-xs capitalize">{color} · {CORNER_LABELS[index]}</p>
+        <p className="text-slate-500 text-xs capitalize">
+          {color} · {CORNER_LABELS[index]}
+        </p>
       </div>
       <div className="shrink-0">
         {isReady ? (
           <span className="text-green-400 text-sm font-semibold flex items-center gap-1">
             <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              <path
+                fillRule="evenodd"
+                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                clipRule="evenodd"
+              />
             </svg>
             Ready
           </span>

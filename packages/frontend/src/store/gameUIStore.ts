@@ -28,12 +28,13 @@ export const useGameUIStore = create<GameUIStore>((set) => ({
 
   rotate: () =>
     set((state) => ({
-      rotation: (((state.rotation + 1) % 4) as 0 | 1 | 2 | 3),
+      rotation: ((state.rotation + 1) % 4) as 0 | 1 | 2 | 3,
     })),
 
   flip: () => set((state) => ({ flipped: !state.flipped })),
 
   setHoverCell: (cell) => set({ hoverCell: cell }),
 
-  resetTransform: () => set({ selectedPieceId: null, rotation: 0, flipped: false, hoverCell: null }),
+  resetTransform: () =>
+    set({ selectedPieceId: null, rotation: 0, flipped: false, hoverCell: null }),
 }));

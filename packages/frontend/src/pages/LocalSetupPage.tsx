@@ -23,7 +23,7 @@ function validateName(name: string): string | null {
   const trimmed = name.trim();
   if (!trimmed) return 'Name is required';
   if (trimmed.length < 2) return 'At least 2 characters';
-  if (!NAME_PATTERN.test(trimmed)) return 'Letters, numbers, spaces, _ - \' only';
+  if (!NAME_PATTERN.test(trimmed)) return "Letters, numbers, spaces, _ - ' only";
   return null;
 }
 
@@ -48,7 +48,10 @@ export function LocalSetupPage() {
     // Touch all fields to show any remaining errors
     setTouched([true, true, true, true]);
     if (!canStart) return;
-    setupLocalGame(activeNames.map((n) => n.trim()), turnLimit || 9999);
+    setupLocalGame(
+      activeNames.map((n) => n.trim()),
+      turnLimit || 9999,
+    );
   }
 
   function handleNameChange(i: number, value: string) {
@@ -75,7 +78,9 @@ export function LocalSetupPage() {
         <div className="bg-surface rounded-2xl p-6 border border-slate-700/50 flex flex-col gap-6">
           {/* Player count */}
           <div>
-            <label className="block text-sm font-medium text-slate-400 mb-3">Number of Players</label>
+            <label className="block text-sm font-medium text-slate-400 mb-3">
+              Number of Players
+            </label>
             <div className="flex gap-2">
               {([2, 3, 4] as const).map((n) => (
                 <button
@@ -120,9 +125,7 @@ export function LocalSetupPage() {
                         {names[i].length}/{NAME_MAX}
                       </span>
                     </div>
-                    {hasError && (
-                      <p className="text-red-400 text-xs mt-1 ml-6">{fieldErrors[i]}</p>
-                    )}
+                    {hasError && <p className="text-red-400 text-xs mt-1 ml-6">{fieldErrors[i]}</p>}
                   </div>
                 );
               })}
@@ -154,7 +157,11 @@ export function LocalSetupPage() {
             <Button variant="ghost" onClick={() => setPhase('landing')} className="flex-1">
               Back
             </Button>
-            <Button onClick={handleStart} className="flex-1" disabled={touched.slice(0, playerCount).some(Boolean) && !canStart}>
+            <Button
+              onClick={handleStart}
+              className="flex-1"
+              disabled={touched.slice(0, playerCount).some(Boolean) && !canStart}
+            >
               Start Game
             </Button>
           </div>

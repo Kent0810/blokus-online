@@ -36,15 +36,15 @@ export const Chat = React.memo(function Chat({ messages, myPlayerId, onSend }: C
       <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Chat</p>
 
       <div className="flex flex-col gap-1 h-28 overflow-y-auto pr-0.5">
-        {messages.length === 0 && (
-          <p className="text-slate-600 text-xs italic">No messages yet…</p>
-        )}
+        {messages.length === 0 && <p className="text-slate-600 text-xs italic">No messages yet…</p>}
         {messages.map((msg, i) => (
           <div
             key={i}
             className={`flex flex-col ${msg.playerId === myPlayerId ? 'items-end' : 'items-start'}`}
           >
-            <span className={`text-[10px] font-medium ${COLOR_TEXT[msg.playerColor] ?? 'text-slate-400'}`}>
+            <span
+              className={`text-[10px] font-medium ${COLOR_TEXT[msg.playerColor] ?? 'text-slate-400'}`}
+            >
               {msg.playerName}
             </span>
             <span className="bg-surface-2 rounded px-2 py-0.5 text-white text-xs break-all max-w-full">

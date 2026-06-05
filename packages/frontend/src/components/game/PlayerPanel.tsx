@@ -21,10 +21,17 @@ interface PlayerPanelProps {
   skippedPlayers: string[];
 }
 
-export function PlayerPanel({ players, currentPlayerIndex, myPlayerId, skippedPlayers }: PlayerPanelProps) {
+export function PlayerPanel({
+  players,
+  currentPlayerIndex,
+  myPlayerId,
+  skippedPlayers,
+}: PlayerPanelProps) {
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Players</h3>
+      <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+        Players
+      </h3>
       {players.map((player, idx) => {
         const isActive = idx === currentPlayerIndex;
         const isMe = player.id === myPlayerId;
@@ -34,20 +41,22 @@ export function PlayerPanel({ players, currentPlayerIndex, myPlayerId, skippedPl
           <div
             key={player.id}
             className={`p-3 rounded-xl transition-all duration-300 ${
-              isActive
-                ? `bg-surface-2 ring-2 ${colorRing[player.color]} turn-flash`
-                : 'bg-surface'
+              isActive ? `bg-surface-2 ring-2 ${colorRing[player.color]} turn-flash` : 'bg-surface'
             } ${isSkipped ? 'opacity-40' : ''}`}
           >
             <div className="flex items-center gap-2 mb-2">
               <div className={`w-3 h-3 rounded-full shrink-0 ${colorDot[player.color]}`} />
-              <span className="text-sm font-semibold text-white truncate flex-1">{player.name}</span>
+              <span className="text-sm font-semibold text-white truncate flex-1">
+                {player.name}
+              </span>
               {isMe && <span className="text-xs text-blue-400 font-medium">You</span>}
               {!player.connected && <span className="text-xs text-red-400">●</span>}
               {isSkipped && <span className="text-xs text-slate-500">Done</span>}
             </div>
             <div className="flex items-center justify-between">
-              <span className={`text-xl font-bold ${isActive ? 'text-white score-bump' : 'text-slate-300'}`}>
+              <span
+                className={`text-xl font-bold ${isActive ? 'text-white score-bump' : 'text-slate-300'}`}
+              >
                 {player.score}
               </span>
               <span className="text-xs text-slate-500">

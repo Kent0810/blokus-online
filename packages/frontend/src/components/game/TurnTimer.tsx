@@ -8,11 +8,7 @@ export function TurnTimer({ timeRemaining, timeLimit, isMyTurn }: TurnTimerProps
   const pct = Math.max(0, Math.min(100, (timeRemaining / timeLimit) * 100));
   const isUrgent = timeRemaining <= 10;
 
-  const barColor = pct > 50
-    ? 'bg-green-500'
-    : pct > 25
-    ? 'bg-yellow-500'
-    : 'bg-red-500';
+  const barColor = pct > 50 ? 'bg-green-500' : pct > 25 ? 'bg-yellow-500' : 'bg-red-500';
 
   return (
     <div className={`flex items-center gap-3 ${isMyTurn ? 'opacity-100' : 'opacity-50'}`}>

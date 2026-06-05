@@ -53,7 +53,14 @@ export function LandingPage() {
           <div
             key={i}
             className={`absolute rounded-2xl ${b.color}`}
-            style={{ width: b.size, height: b.size, top: b.top, left: b.left, right: (b as { right?: string }).right, bottom: (b as { bottom?: string }).bottom }}
+            style={{
+              width: b.size,
+              height: b.size,
+              top: b.top,
+              left: b.left,
+              right: (b as { right?: string }).right,
+              bottom: (b as { bottom?: string }).bottom,
+            }}
           />
         ))}
       </div>
@@ -63,7 +70,11 @@ export function LandingPage() {
         <div className="text-center mb-10">
           <div className="flex items-center justify-center gap-1.5 mb-3">
             {['bg-blue-500', 'bg-yellow-500', 'bg-red-500', 'bg-green-500'].map((c, i) => (
-              <div key={i} className={`${c} rounded-md`} style={{ width: 18 + i * 4, height: 18 + i * 4 }} />
+              <div
+                key={i}
+                className={`${c} rounded-md`}
+                style={{ width: 18 + i * 4, height: 18 + i * 4 }}
+              />
             ))}
           </div>
           <h1 className="text-5xl font-black text-white tracking-tight">Blockus</h1>
@@ -89,26 +100,14 @@ export function LandingPage() {
 
           {mode === 'none' && (
             <div className="flex flex-col gap-3">
-              <div className="flex gap-2">
-                <Button
-                  className="flex-1"
-                  disabled={!canSubmit}
-                  onClick={() => handleQuickMatch(2)}
-                >
+              <div className="grid grid-cols-3 gap-2">
+                <Button disabled={!canSubmit} onClick={() => handleQuickMatch(2)}>
                   Quick 2P
                 </Button>
-                <Button
-                  className="flex-1"
-                  disabled={!canSubmit}
-                  onClick={() => handleQuickMatch(3)}
-                >
+                <Button disabled={!canSubmit} onClick={() => handleQuickMatch(3)}>
                   Quick 3P
                 </Button>
-                <Button
-                  className="flex-1"
-                  disabled={!canSubmit}
-                  onClick={() => handleQuickMatch(4)}
-                >
+                <Button disabled={!canSubmit} onClick={() => handleQuickMatch(4)}>
                   Quick 4P
                 </Button>
               </div>
@@ -174,8 +173,12 @@ export function LandingPage() {
                 />
               </div>
               <div className="flex gap-2">
-                <Button variant="ghost" onClick={() => setMode('none')} className="flex-1">Back</Button>
-                <Button onClick={handleCreate} disabled={!canSubmit} className="flex-1">Create Room</Button>
+                <Button variant="ghost" onClick={() => setMode('none')} className="flex-1">
+                  Back
+                </Button>
+                <Button onClick={handleCreate} disabled={!canSubmit} className="flex-1">
+                  Create Room
+                </Button>
               </div>
             </div>
           )}
@@ -195,8 +198,14 @@ export function LandingPage() {
                 />
               </div>
               <div className="flex gap-2">
-                <Button variant="ghost" onClick={() => setMode('none')} className="flex-1">Back</Button>
-                <Button onClick={handleJoin} disabled={!canSubmit || joinCode.length < 4} className="flex-1">
+                <Button variant="ghost" onClick={() => setMode('none')} className="flex-1">
+                  Back
+                </Button>
+                <Button
+                  onClick={handleJoin}
+                  disabled={!canSubmit || joinCode.length < 4}
+                  className="flex-1"
+                >
                   Join Room
                 </Button>
               </div>

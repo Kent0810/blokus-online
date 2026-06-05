@@ -25,7 +25,13 @@ interface GameOverModalProps {
   onLeave: () => void;
 }
 
-export function GameOverModal({ open, rankings, myPlayerId, onRematch, onLeave }: GameOverModalProps) {
+export function GameOverModal({
+  open,
+  rankings,
+  myPlayerId,
+  onRematch,
+  onLeave,
+}: GameOverModalProps) {
   const winner = rankings[0];
 
   return (

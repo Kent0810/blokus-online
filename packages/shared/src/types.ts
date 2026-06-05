@@ -52,13 +52,32 @@ export interface Room {
   createdAt: number;
 }
 
-export interface JoinQueuePayload { name: string; mode: 2 | 3 | 4; }
-export interface CreateRoomPayload { name: string; maxPlayers: 2 | 3 | 4; turnTimeLimit: number; }
-export interface JoinRoomPayload { name: string; code: string; }
-export interface PlayerReadyPayload { roomId: string; }
-export interface SubmitMovePayload { roomId: string; move: GameMove; }
-export interface RematchVotePayload { roomId: string; }
-export interface LeaveRoomPayload { roomId: string; }
+export interface JoinQueuePayload {
+  name: string;
+  mode: 2 | 3 | 4;
+}
+export interface CreateRoomPayload {
+  name: string;
+  maxPlayers: 2 | 3 | 4;
+  turnTimeLimit: number;
+}
+export interface JoinRoomPayload {
+  name: string;
+  code: string;
+}
+export interface PlayerReadyPayload {
+  roomId: string;
+}
+export interface SubmitMovePayload {
+  roomId: string;
+  move: GameMove;
+}
+export interface RematchVotePayload {
+  roomId: string;
+}
+export interface LeaveRoomPayload {
+  roomId: string;
+}
 
 export interface ChatMessage {
   playerId: string;
@@ -67,13 +86,37 @@ export interface ChatMessage {
   text: string;
   timestamp: number;
 }
-export interface ChatPayload { roomId: string; text: string; }
-export interface ChatUpdatePayload { message: ChatMessage; }
+export interface ChatPayload {
+  roomId: string;
+  text: string;
+}
+export interface ChatUpdatePayload {
+  message: ChatMessage;
+}
 
-export interface MatchFoundPayload { roomId: string; code: string; playerId: string; }
-export interface RoomUpdatePayload { room: Omit<Room, 'gameState'>; players: Player[]; }
-export interface GameStartPayload { gameState: GameState; }
-export interface GameUpdatePayload { gameState: GameState; }
-export interface TimerTickPayload { timeRemaining: number; }
-export interface GameEndPayload { gameState: GameState; rankings: Array<{ player: Player; score: number; rank: number }>; }
-export interface ErrorPayload { message: string; code: string; }
+export interface MatchFoundPayload {
+  roomId: string;
+  code: string;
+  playerId: string;
+}
+export interface RoomUpdatePayload {
+  room: Omit<Room, 'gameState'>;
+  players: Player[];
+}
+export interface GameStartPayload {
+  gameState: GameState;
+}
+export interface GameUpdatePayload {
+  gameState: GameState;
+}
+export interface TimerTickPayload {
+  timeRemaining: number;
+}
+export interface GameEndPayload {
+  gameState: GameState;
+  rankings: Array<{ player: Player; score: number; rank: number }>;
+}
+export interface ErrorPayload {
+  message: string;
+  code: string;
+}
