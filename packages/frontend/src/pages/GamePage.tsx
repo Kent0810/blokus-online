@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Board } from '../components/game/Board';
 import { Chat } from '../components/game/Chat';
 import { PieceSelector } from '../components/game/PieceSelector';
@@ -10,6 +10,7 @@ import { useGameUIStore } from '../store/gameUIStore';
 import { useHoverPreview } from '../hooks/usePieceTransform';
 import { emit } from '../socket';
 import { PIECE_IDS } from '@blockus/shared';
+import { audioManager } from '../audio/audioManager';
 
 const COLOR_BG: Record<string, string> = {
   blue: 'bg-blue-600',
@@ -56,6 +57,44 @@ export function GamePage() {
       ? Array.from(gameState.skippedPlayers as Set<string>)
       : [];
 
+  // Sound: game start fanfare
+  useEffect(() => {
+    audioManager.playSound('gameStart');
+  }, []);
+
+  // Sound: chime when it becomes my turn
+  const prevCurrentIndexRef = useRef<number | null>(null);
+  useEffect(() => {
+    const idx = gameState?.currentPlayerIndex ?? null;
+    if (
+      idx !== null &&
+      idx !== prevCurrentIndexRef.current &&
+      !isLocal &&
+      currentPlayer?.id === playerId
+    ) {
+      audioManager.playSound('turnStart');
+    }
+    prevCurrentIndexRef.current = idx;
+  }, [gameState?.currentPlayerIndex, currentPlayer?.id, playerId, isLocal]);
+
+  // Sound: game over
+  const gameEndFiredRef = useRef(false);
+  useEffect(() => {
+    if (phase === 'game_over' && !gameEndFiredRef.current) {
+      gameEndFiredRef.current = true;
+      audioManager.playSound('gameEnd');
+    }
+    if (phase !== 'game_over') {
+      gameEndFiredRef.current = false;
+    }
+  }, [phase]);
+
+  // Sound: invalid move (error banner)
+  const { error } = useAppStore();
+  useEffect(() => {
+    if (error) audioManager.playSound('invalid');
+  }, [error]);
+
   // Keyboard shortcuts
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -92,6 +131,7 @@ export function GamePage() {
       if (isLocal) {
         const success = applyLocalMove(move);
         if (success) {
+          audioManager.playSound('place');
           resetTransform();
           const nextState = useAppStore.getState().gameState;
           if (nextState && nextState.status !== 'finished') {
@@ -99,6 +139,7 @@ export function GamePage() {
           }
         }
       } else {
+        audioManager.playSound('place');
         emit.submitMove({ roomId: roomId!, move });
         resetTransform();
       }

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useAppStore } from './store/appStore';
 import { useSocketEvents } from './hooks/useSocketEvents';
 import { LandingPage } from './pages/LandingPage';
@@ -6,6 +7,7 @@ import { LobbyPage } from './pages/LobbyPage';
 import { GamePage } from './pages/GamePage';
 import { LocalSetupPage } from './pages/LocalSetupPage';
 import { disconnectSocket } from './socket';
+import { audioManager } from './audio/audioManager';
 
 function ConnectionBanner() {
   const { connectionState, gameMode, phase } = useAppStore();
@@ -39,6 +41,22 @@ function ErrorBanner() {
   );
 }
 
+function MuteButton() {
+  const [muted, setMuted] = useState(() => audioManager.muted);
+  return (
+    <button
+      onClick={() => {
+        audioManager.resume();
+        setMuted(audioManager.toggleMute());
+      }}
+      className="text-xs text-slate-500 hover:text-slate-300 bg-surface/80 border border-slate-700/50 px-3 py-1.5 rounded-lg transition-all backdrop-blur-sm"
+      title={muted ? 'Unmute' : 'Mute'}
+    >
+      {muted ? '🔇' : '🔊'}
+    </button>
+  );
+}
+
 function HomeButton() {
   const { phase, resetToLanding } = useAppStore();
   if (phase === 'landing') return null;
@@ -48,7 +66,7 @@ function HomeButton() {
         disconnectSocket();
         resetToLanding();
       }}
-      className="fixed top-3 right-3 z-40 text-xs text-slate-500 hover:text-slate-300 bg-surface/80 border border-slate-700/50 px-3 py-1.5 rounded-lg transition-all backdrop-blur-sm"
+      className="text-xs text-slate-500 hover:text-slate-300 bg-surface/80 border border-slate-700/50 px-3 py-1.5 rounded-lg transition-all backdrop-blur-sm"
       title="Back to home"
     >
       ⌂ Home
@@ -60,11 +78,30 @@ export default function App() {
   const { phase } = useAppStore();
   useSocketEvents();
 
+  // Start music on first user interaction (browser autoplay policy requires a gesture)
+  useEffect(() => {
+    function onFirstInteraction() {
+      audioManager.resume();
+      audioManager.startMusic();
+      window.removeEventListener('pointerdown', onFirstInteraction);
+      window.removeEventListener('keydown', onFirstInteraction);
+    }
+    window.addEventListener('pointerdown', onFirstInteraction);
+    window.addEventListener('keydown', onFirstInteraction);
+    return () => {
+      window.removeEventListener('pointerdown', onFirstInteraction);
+      window.removeEventListener('keydown', onFirstInteraction);
+    };
+  }, []);
+
   return (
     <>
       <ConnectionBanner />
       <ErrorBanner />
-      <HomeButton />
+      <div className="fixed top-3 right-3 z-40 flex items-center gap-2">
+        <MuteButton />
+        <HomeButton />
+      </div>
       {phase === 'landing' && <LandingPage />}
       {phase === 'local_setup' && <LocalSetupPage />}
       {phase === 'matchmaking' && <MatchmakingPage />}
