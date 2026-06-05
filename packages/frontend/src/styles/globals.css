@@ -1,0 +1,163 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-blue: #3B82F6;
+  --color-yellow: #EAB308;
+  --color-red: #EF4444;
+  --color-green: #22C55E;
+  --color-board-bg: #1E293B;
+  --color-board-line: #334155;
+  --color-bg: #0F172A;
+  --color-surface: #1E293B;
+  --color-surface-2: #334155;
+  --color-text: #F8FAFC;
+  --color-text-muted: #94A3B8;
+  --cell-size: 28px;
+  --animation-fast: 150ms;
+  --animation-normal: 300ms;
+  --animation-slow: 500ms;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+/* Board cell animations */
+.board-cell {
+  transition: background-color var(--animation-fast) ease,
+              transform var(--animation-fast) ease,
+              box-shadow var(--animation-fast) ease;
+}
+
+.board-cell.placed {
+  animation: cellPlace var(--animation-normal) ease-out forwards;
+}
+
+@keyframes cellPlace {
+  0% { transform: scale(0.6); opacity: 0.6; }
+  60% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Ghost preview */
+.board-cell.ghost-valid {
+  opacity: 0.55;
+  animation: ghostPulse 1.2s ease-in-out infinite;
+}
+
+.board-cell.ghost-invalid {
+  opacity: 0.4;
+}
+
+@keyframes ghostPulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.75; }
+}
+
+/* Piece card animations */
+.piece-card {
+  transition: transform var(--animation-fast) ease,
+              box-shadow var(--animation-fast) ease,
+              opacity var(--animation-fast) ease;
+}
+
+.piece-card:hover:not(.used) {
+  transform: translateY(-2px);
+}
+
+.piece-card.selected {
+  transform: translateY(-3px);
+}
+
+/* Turn transition */
+.turn-flash {
+  animation: turnFlash 0.6s ease-out;
+}
+
+@keyframes turnFlash {
+  0% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* Score update */
+.score-bump {
+  animation: scoreBump 0.5s ease-out;
+}
+
+@keyframes scoreBump {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); color: #22C55E; }
+  100% { transform: scale(1); }
+}
+
+/* Matchmaking search animation */
+@keyframes searchRing {
+  0% { transform: scale(0.8); opacity: 0; }
+  50% { opacity: 0.6; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+.matchmaking-ring {
+  animation: searchRing 2s ease-out infinite;
+}
+
+.matchmaking-ring:nth-child(2) {
+  animation-delay: 0.6s;
+}
+
+.matchmaking-ring:nth-child(3) {
+  animation-delay: 1.2s;
+}
+
+/* Endgame confetti-like results */
+@keyframes rankSlideIn {
+  0% { transform: translateX(-30px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+.rank-item {
+  animation: rankSlideIn 0.4s ease-out both;
+}
+
+.rank-item:nth-child(1) { animation-delay: 0.1s; }
+.rank-item:nth-child(2) { animation-delay: 0.2s; }
+.rank-item:nth-child(3) { animation-delay: 0.3s; }
+.rank-item:nth-child(4) { animation-delay: 0.4s; }
+
+/* Timer urgency */
+@keyframes timerUrgent {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.timer-urgent {
+  animation: timerUrgent 0.6s ease-in-out infinite;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-surface);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-surface-2);
+  border-radius: 3px;
+}
+
+/* Disable text selection on game board */
+.game-board {
+  user-select: none;
+}

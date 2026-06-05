@@ -1,0 +1,7 @@
+node_modules
+.DS_Store
+ARCHITECTURE.md
+.claude
+.idea
+.understand-anything
+dist
