@@ -18,8 +18,8 @@ export function LobbyPage() {
 
   const isReady = room.readyPlayerIds.includes(playerId);
   const allReady =
-    players.length === room.maxPlayers && players.every((p) => room.readyPlayerIds.includes(p.id));
-  const slots = Array.from({ length: room.maxPlayers });
+    players.length === room.mode && players.every((p) => room.readyPlayerIds.includes(p.id));
+  const slots = Array.from({ length: room.mode });
 
   function handleReady() {
     emit.playerReady({ roomId: roomId! });
@@ -36,7 +36,7 @@ export function LobbyPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-black text-white">Game Lobby</h1>
-          <p className="text-slate-400 mt-1">{room.maxPlayers}-Player Game</p>
+          <p className="text-slate-400 mt-1">{room.mode}-Player Game</p>
         </div>
 
         {/* Room code */}
@@ -67,7 +67,7 @@ export function LobbyPage() {
             </div>
           ) : (
             <p className="text-center text-slate-500 text-sm">
-              {players.length} / {room.maxPlayers} players joined
+              {players.length} / {room.mode} players joined
             </p>
           )}
 

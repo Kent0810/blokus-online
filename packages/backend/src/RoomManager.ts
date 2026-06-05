@@ -12,31 +12,36 @@ export interface RoomEntry {
 
 type QueueEntry = { socketId: string; name: string };
 
-function generateCode(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-}
-
-function generateId(): string {
-  return Math.random().toString(36).slice(2, 10);
-}
-
 export class RoomManager {
   private rooms = new Map<string, RoomEntry>();
   private socketToRoom = new Map<string, string>(); // socketId → roomId
+
+  /*
+    Using internal queue for now
+
+    -> Meaning if the server restarts — queue is gone. If you run two server instances — they have separate queues and players will never match across them.
+
+    1. Redis (most common for this)
+      Player A → Server 1 → Redis Queue
+      Player B → Server 2 → Redis Queue → match found → notify both servers
+
+    2. Message Queue (BullMQ / RabbitMQ)
+      BullMQ sits on top of Redis, gives you job queues with retries, priorities, delays
+      Overkill for matchmaking but useful if you add things like ranked matching, skill-based pairing, or timeout handling
+   */
   private queues = new Map<number, QueueEntry[]>(); // mode (2|4) → queue
 
   createRoom(
     socketId: string,
     name: string,
-    maxPlayers: 2 | 3 | 4,
-    turnTimeLimit: number,
+    mode: 2 | 3 | 4,
+    turnTimeLimit: number = 120,
   ): RoomEntry {
-    const playerId = `p-${generateId()}`;
-    const roomId = `r-${generateId()}`;
-    const code = generateCode();
+    const playerId = `p-${this.generateId()}`;
+    const roomId = `r-${this.generateId()}`;
+    const code = this.generateCode();
 
-    const player: Player = {
+    const host: Player = {
       id: playerId,
       name,
       color: 'blue',
@@ -51,7 +56,7 @@ export class RoomManager {
       code,
       hostId: playerId,
       status: 'lobby',
-      maxPlayers,
+      mode,
       isPublic: false,
       gameState: null,
       playerIds: [playerId],
@@ -61,7 +66,7 @@ export class RoomManager {
 
     const entry: RoomEntry = {
       room,
-      players: [player],
+      players: [host],
       socketToPlayerId: new Map([[socketId, playerId]]),
       playerIdToSocket: new Map([[playerId, socketId]]),
       rematchVotes: new Set(),
@@ -70,24 +75,24 @@ export class RoomManager {
 
     this.rooms.set(roomId, entry);
     this.socketToRoom.set(socketId, roomId);
+
     return entry;
   }
 
+  // NEXT: TRY TO UNDERSTAND ME
   joinRoom(socketId: string, name: string, code: string): RoomEntry {
     const entry = [...this.rooms.values()].find(
       (e) => e.room.code === code && e.room.status === 'lobby',
     );
     if (!entry) throw new Error('Room not found or already started.');
-    if (entry.room.playerIds.length >= entry.room.maxPlayers)
-      throw new Error('Room is full.');
-    if (entry.socketToPlayerId.has(socketId))
-      throw new Error('Already in this room.');
+    if (entry.room.playerIds.length >= entry.room.mode) throw new Error('Room is full.');
+    if (entry.socketToPlayerId.has(socketId)) throw new Error('Already in this room.');
 
     const COLORS = ['blue', 'yellow', 'red', 'green'] as const;
     const usedColors = new Set(entry.players.map((p) => p.color));
     const color = COLORS.find((c) => !usedColors.has(c))!;
 
-    const playerId = `p-${generateId()}`;
+    const playerId = `p-${this.generateId()}`;
     const player: Player = {
       id: playerId,
       name,
@@ -109,24 +114,29 @@ export class RoomManager {
 
   joinQueue(socketId: string, name: string, mode: 2 | 3 | 4): RoomEntry | null {
     const queue = this.queues.get(mode) ?? [];
+
+    const isDuplicated = queue.find((e) => e.socketId === socketId);
+
     // Don't add duplicates
-    if (!queue.find((e) => e.socketId === socketId)) {
+    if (!isDuplicated) {
       queue.push({ socketId, name });
       this.queues.set(mode, queue);
     }
 
     if (queue.length >= mode) {
+      // Take out the first `mode` players from the queue
       const matched = queue.splice(0, mode);
+
       this.queues.set(mode, queue);
 
       // Create room with first player as host
       const [host, ...rest] = matched;
-      const entry = this.createRoom(host.socketId, host.name, mode, 60);
+      const entry = this.createRoom(host.socketId, host.name, mode);
       entry.room.isPublic = true;
 
       // Join remaining players
-      for (const p of rest) {
-        this.joinRoom(p.socketId, p.name, entry.room.code);
+      for (const player of rest) {
+        this.joinRoom(player.socketId, player.name, entry.room.code);
       }
 
       return entry;
@@ -159,7 +169,7 @@ export class RoomManager {
   allReady(entry: RoomEntry): boolean {
     return (
       entry.room.playerIds.length >= 2 &&
-      entry.room.playerIds.length === entry.room.maxPlayers &&
+      entry.room.playerIds.length === entry.room.mode &&
       entry.room.playerIds.every((id) => entry.room.readyPlayerIds.includes(id))
     );
   }
@@ -237,5 +247,30 @@ export class RoomManager {
       }
       this.rooms.delete(roomId);
     }
+  }
+
+  /*
+    Strip away game state for payload when the user just want to update room metadata not the state of the same room
+
+    e.g. when a player joins, ready up, or votes for rematch — we want to send room updates to all players but the game state is managed separately by GameSession and doesn't need to be sent every time.
+  */
+  public toPayload(entry: RoomEntry) {
+    const { gameState: _gs, ...roomWithoutState } = entry.room;
+
+    return {
+      room: roomWithoutState,
+      players: entry.players,
+    };
+  }
+
+  private generateCode(): string {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join(
+      '',
+    );
+  }
+
+  private generateId(): string {
+    return Math.random().toString(36).slice(2, 10);
   }
 }

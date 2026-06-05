@@ -30,7 +30,7 @@ export function LandingPage() {
   function handleCreate() {
     if (!canSubmit) return;
     connect(name.trim());
-    emit.createRoom({ name: name.trim(), maxPlayers: playerCount, turnTimeLimit: turnLimit });
+    emit.createRoom({ name: name.trim(), mode: playerCount, turnTimeLimit: turnLimit });
   }
 
   function handleJoin() {

@@ -7,7 +7,7 @@ import {
   PIECE_IDS,
 } from '@blockus/shared';
 import type { Server } from 'socket.io';
-import { logger } from './logger';
+import { logger } from './utils/logger';
 
 export class GameSession {
   private gameState: GameState;
@@ -182,22 +182,12 @@ export class GameSession {
   }
 
   // Rebuild a new session with same players for rematch
-  static forRematch(
-    session: GameSession,
-    turnTimeLimit: number,
-    io: Server,
-  ): GameSession {
+  static forRematch(session: GameSession, turnTimeLimit: number, io: Server): GameSession {
     const players = session.gameState.players.map((p) => ({
       ...p,
       remainingPieces: [...PIECE_IDS],
       score: 0,
     }));
-    return new GameSession(
-      players,
-      session.socketToPlayerId,
-      turnTimeLimit,
-      session.roomId,
-      io,
-    );
+    return new GameSession(players, session.socketToPlayerId, turnTimeLimit, session.roomId, io);
   }
 }

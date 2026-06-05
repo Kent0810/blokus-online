@@ -44,7 +44,7 @@ export interface Room {
   code: string;
   hostId: string;
   status: RoomStatus;
-  maxPlayers: 2 | 3 | 4;
+  mode: 2 | 3 | 4;
   isPublic: boolean;
   gameState: GameState | null;
   playerIds: string[];
@@ -53,13 +53,11 @@ export interface Room {
 }
 
 export interface JoinQueuePayload {
-  name: string;
-  mode: 2 | 3 | 4;
+  readonly name: string;
+  readonly mode: 2 | 3 | 4;
 }
-export interface CreateRoomPayload {
-  name: string;
-  maxPlayers: 2 | 3 | 4;
-  turnTimeLimit: number;
+export interface CreateRoomPayload extends JoinQueuePayload {
+  readonly turnTimeLimit: number;
 }
 export interface JoinRoomPayload {
   name: string;
