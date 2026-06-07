@@ -8,6 +8,7 @@ import {
   PIECE_IDS,
 } from '@blockus/shared';
 import type { GameEndPayload } from '@blockus/shared';
+import { DEFAULT_AVATAR, AVATARS } from '../constants/avatars';
 
 export type AppPhase = 'landing' | 'local_setup' | 'matchmaking' | 'lobby' | 'game' | 'game_over';
 export type GameMode = 'online' | 'local';
@@ -17,6 +18,8 @@ interface AppStore {
   gameMode: GameMode;
   playerName: string;
   playerId: string;
+  playerAvatar: string;
+  playerAvatarMap: Record<string, string>;
   roomId: string | null;
   roomCode: string | null;
   room: Omit<Room, 'gameState'> | null;
@@ -29,6 +32,8 @@ interface AppStore {
 
   setPhase: (phase: AppPhase) => void;
   setPlayer: (name: string, id: string) => void;
+  setPlayerName: (name: string) => void;
+  setAvatar: (avatar: string) => void;
   setMatchFound: (roomId: string, code: string, playerId: string) => void;
   setRoom: (room: Omit<Room, 'gameState'>, players: Player[]) => void;
   setGameState: (gameState: GameState) => void;
@@ -36,7 +41,7 @@ interface AppStore {
   setConnectionState: (state: 'connected' | 'disconnected' | 'reconnecting') => void;
   setError: (error: string | null) => void;
   addChatMessage: (message: ChatMessage) => void;
-  setupLocalGame: (playerNames: string[], turnTimeLimit: number) => void;
+  setupLocalGame: (playerNames: string[], avatars: string[], turnTimeLimit: number) => void;
   applyLocalMove: (move: GameMove) => boolean;
   localRematch: () => void;
   resetToLanding: () => void;
@@ -46,8 +51,13 @@ interface AppStore {
 const initialState = {
   phase: 'landing' as AppPhase,
   gameMode: 'online' as GameMode,
-  playerName: '',
+  playerName: localStorage.getItem('blockus_name') ?? '',
   playerId: '',
+  playerAvatar: (() => {
+    const stored = localStorage.getItem('blockus_avatar');
+    return stored && (AVATARS as readonly string[]).includes(stored) ? stored : DEFAULT_AVATAR;
+  })(),
+  playerAvatarMap: {} as Record<string, string>,
   roomId: null,
   roomCode: null,
   room: null,
@@ -66,10 +76,34 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   setPhase: (phase) => set({ phase }),
 
-  setPlayer: (name, id) => set({ playerName: name, playerId: id }),
+  setPlayer: (name, id) => {
+    if (name) localStorage.setItem('blockus_name', name);
+    set({ playerName: name, playerId: id });
+  },
+
+  setPlayerName: (name) => {
+    localStorage.setItem('blockus_name', name);
+    set({ playerName: name });
+  },
+
+  setAvatar: (avatar) => {
+    localStorage.setItem('blockus_avatar', avatar);
+    set((state) => ({
+      playerAvatar: avatar,
+      playerAvatarMap: state.playerId
+        ? { ...state.playerAvatarMap, [state.playerId]: avatar }
+        : state.playerAvatarMap,
+    }));
+  },
 
   setMatchFound: (roomId, code, playerId) =>
-    set({ roomId, roomCode: code, phase: 'lobby', playerId }),
+    set((state) => ({
+      roomId,
+      roomCode: code,
+      phase: 'lobby',
+      playerId,
+      playerAvatarMap: { ...state.playerAvatarMap, [playerId]: state.playerAvatar },
+    })),
 
   setRoom: (room, players) =>
     set({
@@ -89,7 +123,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   addChatMessage: (message) => set((state) => ({ chatMessages: [...state.chatMessages, message] })),
 
-  setupLocalGame: (playerNames, turnTimeLimit) => {
+  setupLocalGame: (playerNames, avatars, turnTimeLimit) => {
     const players: Player[] = playerNames.map((name, i) => ({
       id: `local-${i}`,
       name,
@@ -99,6 +133,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
       connected: true,
       isBot: false,
     }));
+    const avatarMap = Object.fromEntries(
+      players.map((p, i) => [p.id, avatars[i] ?? DEFAULT_AVATAR]),
+    );
     const gameState = initializeGame(players, turnTimeLimit);
     set({
       gameMode: 'local',
@@ -106,6 +143,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       gameState,
       phase: 'game',
       rankings: null,
+      playerAvatarMap: avatarMap,
     });
   },
 
@@ -134,10 +172,11 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
 
   localRematch: () => {
-    const { players } = get();
+    const { players, playerAvatarMap } = get();
     if (!players.length) return;
     get().setupLocalGame(
       players.map((p) => p.name),
+      players.map((p) => playerAvatarMap[p.id] ?? DEFAULT_AVATAR),
       0,
     );
   },

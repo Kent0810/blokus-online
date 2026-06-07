@@ -6,12 +6,12 @@ import { useAppStore } from '../store/appStore';
 import { emit } from '../socket';
 
 export function LobbyPage() {
-  const { room, players, playerId, roomId, roomCode } = useAppStore();
+  const { room, players, playerId, roomId, roomCode, playerAvatarMap } = useAppStore();
 
   if (!room || !roomId || !roomCode) {
     return (
       <div className="min-h-screen bg-app flex items-center justify-center">
-        <LoadingSpinner size="lg" className="text-blue-500" />
+        <LoadingSpinner size="lg" className="text-accent" />
       </div>
     );
   }
@@ -40,12 +40,12 @@ export function LobbyPage() {
         </div>
 
         {/* Room code */}
-        <div className="bg-surface rounded-2xl p-6 border border-slate-700/50 mb-4 flex items-center justify-center">
+        <div className="bg-surface rounded-2xl p-6 border border-white/[0.06] mb-4 flex items-center justify-center">
           <RoomCode code={roomCode} />
         </div>
 
         {/* Player slots */}
-        <div className="bg-surface rounded-2xl p-6 border border-slate-700/50 mb-4">
+        <div className="bg-surface rounded-2xl p-6 border border-white/[0.06] mb-4">
           <div className="flex flex-col gap-3">
             {slots.map((_, i) => (
               <PlayerSlot
@@ -54,6 +54,7 @@ export function LobbyPage() {
                 index={i}
                 isReady={players[i] ? room.readyPlayerIds.includes(players[i].id) : false}
                 isYou={players[i]?.id === playerId}
+                avatar={players[i] ? playerAvatarMap[players[i].id] : undefined}
               />
             ))}
           </div>

@@ -49,7 +49,7 @@ function MuteButton() {
         audioManager.resume();
         setMuted(audioManager.toggleMute());
       }}
-      className="text-xs text-slate-500 hover:text-slate-300 bg-surface/80 border border-slate-700/50 px-3 py-1.5 rounded-lg transition-all backdrop-blur-sm"
+      className="text-xs text-slate-500 hover:text-slate-300 bg-surface/80 border border-white/[0.08] px-3 py-1.5 rounded-lg transition-all backdrop-blur-sm"
       title={muted ? 'Unmute' : 'Mute'}
     >
       {muted ? '🔇' : '🔊'}
@@ -66,7 +66,7 @@ function HomeButton() {
         disconnectSocket();
         resetToLanding();
       }}
-      className="text-xs text-slate-500 hover:text-slate-300 bg-surface/80 border border-slate-700/50 px-3 py-1.5 rounded-lg transition-all backdrop-blur-sm"
+      className="text-xs text-slate-500 hover:text-slate-300 bg-surface/80 border border-white/[0.08] px-3 py-1.5 rounded-lg transition-all backdrop-blur-sm"
       title="Back to home"
     >
       ⌂ Home

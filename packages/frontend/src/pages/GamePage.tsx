@@ -32,6 +32,7 @@ export function GamePage() {
     localRematch,
     chatMessages,
     addChatMessage,
+    playerAvatarMap,
   } = useAppStore();
   const { selectedPieceId, rotation, flipped, rotate, flip, selectPiece, resetTransform } =
     useGameUIStore();
@@ -252,7 +253,7 @@ export function GamePage() {
             <p className="text-slate-500 text-sm">Hand the device to {nextPlayer.name}</p>
             <button
               onClick={handleHandoffContinue}
-              className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-10 py-4 rounded-xl text-lg transition-all shadow-lg shadow-blue-900/30 mt-2"
+              className="bg-accent hover:bg-accent-hover text-white font-bold px-10 py-4 rounded-xl text-lg transition-all shadow-lg shadow-accent/20 mt-2"
             >
               I'm ready →
             </button>
@@ -261,7 +262,7 @@ export function GamePage() {
       )}
 
       {/* Top bar */}
-      <div className="flex items-center justify-between px-3 sm:px-6 py-2 sm:py-3 bg-surface border-b border-slate-700/50">
+      <div className="flex items-center justify-between px-3 sm:px-6 py-2 sm:py-3 bg-surface border-b border-white/[0.06]">
         <div className="flex items-center gap-1.5 sm:gap-2">
           {['bg-blue-500', 'bg-yellow-500', 'bg-red-500', 'bg-green-500'].map((c, i) => (
             <div key={i} className={`${c} rounded-sm w-3 h-3 sm:w-4 sm:h-4`} />
@@ -293,7 +294,7 @@ export function GamePage() {
       {/* Desktop layout (≥640px) */}
       <div className="hidden sm:flex flex-1 overflow-hidden">
         {/* Left: Piece selector */}
-        <aside className="w-52 shrink-0 bg-surface border-r border-slate-700/50 p-4 overflow-y-auto">
+        <aside className="w-52 shrink-0 bg-surface border-r border-white/[0.06] p-4 overflow-y-auto">
           {myPlayer ? (
             <PieceSelector
               remainingPieces={myPlayer.remainingPieces}
@@ -317,16 +318,18 @@ export function GamePage() {
         </main>
 
         {/* Right: Players + Chat */}
-        <aside className="w-60 shrink-0 bg-surface border-l border-slate-700/50 p-4 overflow-y-auto flex flex-col">
+        <aside className="w-60 shrink-0 bg-surface border-l border-white/[0.06] p-4 overflow-y-auto flex flex-col">
           <PlayerPanel
             players={gameState.players}
             currentPlayerIndex={gameState.currentPlayerIndex}
             myPlayerId={myPlayer?.id ?? playerId}
             skippedPlayers={skippedPlayers}
+            avatarMap={playerAvatarMap}
           />
           <Chat
             messages={chatMessages}
             myPlayerId={myPlayer?.id ?? playerId}
+            avatarMap={playerAvatarMap}
             onSend={handleSendChat}
           />
           <div className="mt-4">
@@ -353,7 +356,7 @@ export function GamePage() {
         </div>
 
         {/* Compact piece strip */}
-        <div className="bg-surface border-t border-slate-700/50 px-2 py-2 h-14 safe-bottom">
+        <div className="bg-surface border-t border-white/[0.06] px-2 py-2 h-14 safe-bottom">
           {myPlayer && !showHandoff ? (
             <PieceSelector
               remainingPieces={myPlayer.remainingPieces}
@@ -383,7 +386,7 @@ export function GamePage() {
         {/* Players & Chat overlay */}
         {mobilePlayersOpen && (
           <div className="absolute inset-0 bg-app/98 z-20 flex flex-col overflow-y-auto">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700/50 bg-surface sticky top-0">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06] bg-surface sticky top-0">
               <h3 className="text-white font-bold text-sm">Players & Chat</h3>
               <button
                 onClick={() => setMobilePlayersOpen(false)}
@@ -398,15 +401,17 @@ export function GamePage() {
                 currentPlayerIndex={gameState.currentPlayerIndex}
                 myPlayerId={myPlayer?.id ?? playerId}
                 skippedPlayers={skippedPlayers}
+                avatarMap={playerAvatarMap}
               />
               <Chat
                 messages={chatMessages}
                 myPlayerId={myPlayer?.id ?? playerId}
+                avatarMap={playerAvatarMap}
                 onSend={handleSendChat}
               />
               <button
                 onClick={handleLeave}
-                className="w-full text-xs text-slate-500 hover:text-slate-300 py-2 transition-colors border border-dashed border-slate-700 rounded-lg mt-2"
+                className="w-full text-xs text-[#7b94b9] hover:text-[#eef2ff] py-2 transition-colors border border-dashed border-white/10 hover:border-white/20 rounded-lg mt-2"
               >
                 Leave game
               </button>

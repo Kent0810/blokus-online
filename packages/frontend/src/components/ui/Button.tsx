@@ -10,10 +10,11 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantClasses: Record<Variant, string> = {
-  primary: 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/30',
-  secondary: 'bg-surface-2 hover:bg-slate-500 text-white',
+  primary:
+    'bg-accent hover:bg-accent-hover text-white shadow-lg shadow-accent/20 active:scale-[0.97]',
+  secondary: 'bg-surface-2 hover:bg-surface-2/80 text-white active:scale-[0.97]',
   ghost: 'bg-transparent hover:bg-surface-2 text-slate-300 hover:text-white',
-  danger: 'bg-red-600 hover:bg-red-500 text-white',
+  danger: 'bg-red-600 hover:bg-red-500 text-white active:scale-[0.97]',
 };
 
 const sizeClasses: Record<Size, string> = {
@@ -38,7 +39,8 @@ export const Button = React.memo(function Button({
       className={`
         inline-flex items-center justify-center gap-2 rounded-lg font-semibold
         transition-all duration-150 cursor-pointer
-        disabled:opacity-40 disabled:cursor-not-allowed
+        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-surface
+        disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100
         ${variantClasses[variant]}
         ${sizeClasses[size]}
         ${className}

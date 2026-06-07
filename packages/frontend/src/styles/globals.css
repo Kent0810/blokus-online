@@ -3,21 +3,34 @@
 @tailwind utilities;
 
 :root {
-  --color-blue: #3B82F6;
-  --color-yellow: #EAB308;
-  --color-red: #EF4444;
-  --color-green: #22C55E;
-  --color-board-bg: #1E293B;
-  --color-board-line: #334155;
-  --color-bg: #0F172A;
-  --color-surface: #1E293B;
-  --color-surface-2: #334155;
-  --color-text: #F8FAFC;
-  --color-text-muted: #94A3B8;
+  /* Player identity — these carry meaning throughout the whole game */
+  --color-blue: #3b82f6;
+  --color-yellow: #eab308;
+  --color-red: #ef4444;
+  --color-green: #22c55e;
+
+  /* App chrome: deep navy, not generic slate */
+  --color-bg: #080c17;
+  --color-surface: #0f1829;
+  --color-surface-2: #192135;
+
+  /* Board: slightly lighter than chrome so the game area reads as a distinct zone */
+  --color-board-bg: #1a2236;
+  --color-board-line: #27374e;
+
+  /* Primary action accent: indigo-blue, distinct from both the player blue and generic SaaS blue */
+  --color-accent: #4361ee;
+  --color-accent-hover: #3350d6;
+
+  /* Text */
+  --color-text: #eef2ff;
+  --color-text-muted: #7b94b9;
+
   --cell-size: 28px;
-  --animation-fast: 150ms;
-  --animation-normal: 300ms;
-  --animation-slow: 500ms;
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --animation-fast: 120ms;
+  --animation-normal: 280ms;
+  --animation-slow: 480ms;
 }
 
 * {
@@ -33,28 +46,38 @@ body {
   min-height: 100vh;
 }
 
-/* Board cell animations */
+/* ── Board cells ─────────────────────────────────────────────────────────── */
+
 .board-cell {
   touch-action: manipulation;
-  transition: background-color var(--animation-fast) ease,
-              transform var(--animation-fast) ease,
-              box-shadow var(--animation-fast) ease;
+  transition:
+    background-color var(--animation-fast) ease,
+    transform var(--animation-fast) ease,
+    box-shadow var(--animation-fast) ease;
 }
 
 .board-cell.placed {
-  animation: cellPlace var(--animation-normal) ease-out forwards;
+  animation: cellPlace var(--animation-normal) var(--ease-out-quart) forwards;
 }
 
 @keyframes cellPlace {
-  0% { transform: scale(0.6); opacity: 0.6; }
-  60% { transform: scale(1.1); }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0.6);
+    opacity: 0.6;
+  }
+  60% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* Ghost preview */
 .board-cell.ghost-valid {
   opacity: 0.55;
-  animation: ghostPulse 1.2s ease-in-out infinite;
+  animation: ghostPulse 1.4s ease-in-out infinite;
 }
 
 .board-cell.ghost-invalid {
@@ -62,15 +85,22 @@ body {
 }
 
 @keyframes ghostPulse {
-  0%, 100% { opacity: 0.55; }
-  50% { opacity: 0.75; }
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.72;
+  }
 }
 
-/* Piece card animations */
+/* ── Piece cards ─────────────────────────────────────────────────────────── */
+
 .piece-card {
-  transition: transform var(--animation-fast) ease,
-              box-shadow var(--animation-fast) ease,
-              opacity var(--animation-fast) ease;
+  transition:
+    transform var(--animation-fast) var(--ease-out-quart),
+    box-shadow var(--animation-fast) ease,
+    opacity var(--animation-fast) ease;
 }
 
 .piece-card:hover:not(.used) {
@@ -81,72 +111,114 @@ body {
   transform: translateY(-3px);
 }
 
-/* Turn transition */
+/* ── Turn / score feedback ───────────────────────────────────────────────── */
+
 .turn-flash {
-  animation: turnFlash 0.6s ease-out;
+  animation: turnFlash 0.5s var(--ease-out-quart);
 }
 
 @keyframes turnFlash {
-  0% { opacity: 0.5; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 0.45;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
-/* Score update */
 .score-bump {
-  animation: scoreBump 0.5s ease-out;
+  animation: scoreBump 0.45s var(--ease-out-quart);
 }
 
 @keyframes scoreBump {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.3); color: #22C55E; }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.28);
+    color: #22c55e;
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
-/* Matchmaking search animation */
+/* ── Matchmaking ─────────────────────────────────────────────────────────── */
+
 @keyframes searchRing {
-  0% { transform: scale(0.8); opacity: 0; }
-  50% { opacity: 0.6; }
-  100% { transform: scale(2.5); opacity: 0; }
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
 }
 
 .matchmaking-ring {
-  animation: searchRing 2s ease-out infinite;
+  animation: searchRing 2.2s cubic-bezier(0.2, 0.8, 0.4, 1) infinite;
 }
 
 .matchmaking-ring:nth-child(2) {
-  animation-delay: 0.6s;
+  animation-delay: 0.7s;
 }
 
 .matchmaking-ring:nth-child(3) {
-  animation-delay: 1.2s;
+  animation-delay: 1.4s;
 }
 
-/* Endgame confetti-like results */
+/* ── Game over rankings ──────────────────────────────────────────────────── */
+
 @keyframes rankSlideIn {
-  0% { transform: translateX(-30px); opacity: 0; }
-  100% { transform: translateX(0); opacity: 1; }
+  0% {
+    transform: translateX(-24px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 .rank-item {
-  animation: rankSlideIn 0.4s ease-out both;
+  animation: rankSlideIn 0.35s var(--ease-out-quart) both;
 }
 
-.rank-item:nth-child(1) { animation-delay: 0.1s; }
-.rank-item:nth-child(2) { animation-delay: 0.2s; }
-.rank-item:nth-child(3) { animation-delay: 0.3s; }
-.rank-item:nth-child(4) { animation-delay: 0.4s; }
+.rank-item:nth-child(1) {
+  animation-delay: 0.08s;
+}
+.rank-item:nth-child(2) {
+  animation-delay: 0.16s;
+}
+.rank-item:nth-child(3) {
+  animation-delay: 0.24s;
+}
+.rank-item:nth-child(4) {
+  animation-delay: 0.32s;
+}
 
-/* Timer urgency */
+/* ── Timer urgency ───────────────────────────────────────────────────────── */
+
 @keyframes timerUrgent {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
 }
 
 .timer-urgent {
-  animation: timerUrgent 0.6s ease-in-out infinite;
+  animation: timerUrgent 0.55s ease-in-out infinite;
 }
 
-/* Scrollbar */
+/* ── Scrollbar ───────────────────────────────────────────────────────────── */
+
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -158,12 +230,36 @@ body {
   border-radius: 3px;
 }
 
-/* Disable text selection on game board */
+/* ── Misc ────────────────────────────────────────────────────────────────── */
+
 .game-board {
   user-select: none;
 }
 
-/* Safe area padding for mobile notch/home bar */
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .board-cell,
+  .piece-card {
+    transition: none;
+  }
+
+  .board-cell.placed,
+  .board-cell.ghost-valid,
+  .turn-flash,
+  .score-bump,
+  .matchmaking-ring,
+  .rank-item,
+  .timer-urgent {
+    animation: none;
+  }
+
+  .rank-item {
+    opacity: 1;
+    transform: none;
+  }
 }
