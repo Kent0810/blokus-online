@@ -7,6 +7,7 @@ interface GameUIStore {
   hoverCell: [number, number] | null;
 
   selectPiece: (id: string | null) => void;
+  selectWithTransform: (id: string, rotation: 0 | 1 | 2 | 3, flipped: boolean) => void;
   rotate: () => void;
   flip: () => void;
   setHoverCell: (cell: [number, number] | null) => void;
@@ -25,6 +26,8 @@ export const useGameUIStore = create<GameUIStore>((set) => ({
       rotation: 0,
       flipped: false,
     })),
+
+  selectWithTransform: (id, rotation, flipped) => set({ selectedPieceId: id, rotation, flipped }),
 
   rotate: () =>
     set((state) => ({

@@ -34,13 +34,13 @@ export class SocketHandlers {
 
   private registerHandlers(socket: Socket) {
     // ── join_queue (feature: Quick Play) ────────────────────────────────────────────────────────────── :check-mark:
-    socket.on('join_queue', ({ name, mode }: JoinQueuePayload) => {
+    socket.on('join_queue', ({ name, maxPlayers }: JoinQueuePayload) => {
       try {
-        const entry = this.roomManager.joinQueue(socket.id, name, mode);
+        const entry = this.roomManager.joinQueue(socket.id, name, maxPlayers);
 
         if (!entry) {
           socket.emit('queued', {});
-          logger.info(`Socket ${socket.id} queued for ${mode}P`);
+          logger.info(`Socket ${socket.id} queued for ${maxPlayers}P`);
 
           return;
         }
@@ -67,20 +67,26 @@ export class SocketHandlers {
           }
         }
 
-        logger.info(`Match found for ${mode}P, room ${entry.room.id}`);
+        logger.info(`Match found for ${maxPlayers}P, room ${entry.room.id}`);
       } catch (e) {
         this.sendError(socket, (e as Error).message);
       }
     });
 
     // ── create_room ──────────────────────────────────────────────────────────────
-    socket.on('create_room', ({ name, mode, turnTimeLimit }: CreateRoomPayload) => {
+    socket.on('create_room', ({ name, maxPlayers, turnTimeLimit, variant }: CreateRoomPayload) => {
       try {
         logger.info(
-          `Socket ${socket.id} is creating a room with name: ${name}, mode: ${mode}, turnTimeLimit: ${turnTimeLimit}`,
+          `Socket ${socket.id} is creating a room with name: ${name}, maxPlayers: ${maxPlayers}, turnTimeLimit: ${turnTimeLimit}, variant: ${variant ?? 'standard'}`,
         );
 
-        const entry = this.roomManager.createRoom(socket.id, name, mode, turnTimeLimit);
+        const entry = this.roomManager.createRoom(
+          socket.id,
+          name,
+          maxPlayers,
+          turnTimeLimit,
+          variant,
+        );
         const creatorPlayerId = entry.socketToPlayerId.get(socket.id)!;
 
         socket.join(entry.room.id);
@@ -135,6 +141,7 @@ export class SocketHandlers {
             entry.turnTimeLimit,
             roomId,
             this.io,
+            entry.variant,
           );
 
           // Append the session to a lists of sessions

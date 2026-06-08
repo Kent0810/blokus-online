@@ -1,4 +1,4 @@
-import type { Player, Room } from '@blockus/shared';
+import type { GameVariant, Player, Room } from '@blockus/shared';
 
 // Internal room state stored in memory
 export interface RoomEntry {
@@ -8,6 +8,7 @@ export interface RoomEntry {
   playerIdToSocket: Map<string, string>; // Player.id → socketId
   rematchVotes: Set<string>; // playerIds who voted rematch
   turnTimeLimit: number;
+  variant: GameVariant;
 }
 
 type QueueEntry = { socketId: string; name: string };
@@ -29,13 +30,14 @@ export class RoomManager {
       BullMQ sits on top of Redis, gives you job queues with retries, priorities, delays
       Overkill for matchmaking but useful if you add things like ranked matching, skill-based pairing, or timeout handling
    */
-  private queues = new Map<number, QueueEntry[]>(); // mode (2|4) → queue
+  private queues = new Map<number, QueueEntry[]>(); // maxPlayers (2|3|4) → queue
 
   createRoom(
     socketId: string,
     name: string,
-    mode: 2 | 3 | 4,
+    maxPlayers: 2 | 3 | 4,
     turnTimeLimit: number = 120,
+    variant: GameVariant = 'standard',
   ): RoomEntry {
     const playerId = `p-${this.generateId()}`;
     const roomId = `r-${this.generateId()}`;
@@ -56,7 +58,7 @@ export class RoomManager {
       code,
       hostId: playerId,
       status: 'lobby',
-      mode,
+      maxPlayers,
       isPublic: false,
       gameState: null,
       playerIds: [playerId],
@@ -71,6 +73,7 @@ export class RoomManager {
       playerIdToSocket: new Map([[playerId, socketId]]),
       rematchVotes: new Set(),
       turnTimeLimit,
+      variant,
     };
 
     this.rooms.set(roomId, entry);
@@ -85,7 +88,7 @@ export class RoomManager {
       (e) => e.room.code === code && e.room.status === 'lobby',
     );
     if (!entry) throw new Error('Room not found or already started.');
-    if (entry.room.playerIds.length >= entry.room.mode) throw new Error('Room is full.');
+    if (entry.room.playerIds.length >= entry.room.maxPlayers) throw new Error('Room is full.');
     if (entry.socketToPlayerId.has(socketId)) throw new Error('Already in this room.');
 
     const COLORS = ['blue', 'yellow', 'red', 'green'] as const;
@@ -112,26 +115,26 @@ export class RoomManager {
     return entry;
   }
 
-  joinQueue(socketId: string, name: string, mode: 2 | 3 | 4): RoomEntry | null {
-    const queue = this.queues.get(mode) ?? [];
+  joinQueue(socketId: string, name: string, maxPlayers: 2 | 3 | 4): RoomEntry | null {
+    const queue = this.queues.get(maxPlayers) ?? [];
 
     const isDuplicated = queue.find((e) => e.socketId === socketId);
 
     // Don't add duplicates
     if (!isDuplicated) {
       queue.push({ socketId, name });
-      this.queues.set(mode, queue);
+      this.queues.set(maxPlayers, queue);
     }
 
-    if (queue.length >= mode) {
-      // Take out the first `mode` players from the queue
-      const matched = queue.splice(0, mode);
+    if (queue.length >= maxPlayers) {
+      // Take out the first `maxPlayers` players from the queue
+      const matched = queue.splice(0, maxPlayers);
 
-      this.queues.set(mode, queue);
+      this.queues.set(maxPlayers, queue);
 
       // Create room with first player as host
       const [host, ...rest] = matched;
-      const entry = this.createRoom(host.socketId, host.name, mode);
+      const entry = this.createRoom(host.socketId, host.name, maxPlayers);
       entry.room.isPublic = true;
 
       // Join remaining players
@@ -169,7 +172,7 @@ export class RoomManager {
   allReady(entry: RoomEntry): boolean {
     return (
       entry.room.playerIds.length >= 2 &&
-      entry.room.playerIds.length === entry.room.mode &&
+      entry.room.playerIds.length === entry.room.maxPlayers &&
       entry.room.playerIds.every((id) => entry.room.readyPlayerIds.includes(id))
     );
   }

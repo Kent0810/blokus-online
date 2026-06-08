@@ -1,4 +1,4 @@
-import type { GameMove, GameState, Player } from '@blockus/shared';
+import type { GameMove, GameState, GameVariant, Player } from '@blockus/shared';
 import {
   applyMove,
   calculateNextTurn,
@@ -25,6 +25,7 @@ export class GameSession {
     turnTimeLimit: number,
     roomId: string,
     io: Server,
+    variant: GameVariant = 'standard',
   ) {
     this.roomId = roomId;
     this.io = io;
@@ -35,7 +36,7 @@ export class GameSession {
       const player = playerById.get(playerId);
       if (player) this.socketToPlayer.set(socketId, player);
     }
-    this.gameState = initializeGame(players, turnTimeLimit);
+    this.gameState = initializeGame(players, turnTimeLimit, variant);
   }
 
   start() {
@@ -188,6 +189,13 @@ export class GameSession {
       remainingPieces: [...PIECE_IDS],
       score: 0,
     }));
-    return new GameSession(players, session.socketToPlayerId, turnTimeLimit, session.roomId, io);
+    return new GameSession(
+      players,
+      session.socketToPlayerId,
+      turnTimeLimit,
+      session.roomId,
+      io,
+      session.gameState.variant,
+    );
   }
 }

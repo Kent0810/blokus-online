@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { ChatMessage, GameState, GameMove, Player, Room } from '@blockus/shared';
+import type { ChatMessage, GameState, GameMove, GameVariant, Player, Room } from '@blockus/shared';
 import {
   applyMove,
   calculateNextTurn,
@@ -16,6 +16,7 @@ export type GameMode = 'online' | 'local';
 interface AppStore {
   phase: AppPhase;
   gameMode: GameMode;
+  gameVariant: GameVariant;
   playerName: string;
   playerId: string;
   playerAvatar: string;
@@ -41,38 +42,59 @@ interface AppStore {
   setConnectionState: (state: 'connected' | 'disconnected' | 'reconnecting') => void;
   setError: (error: string | null) => void;
   addChatMessage: (message: ChatMessage) => void;
-  setupLocalGame: (playerNames: string[], avatars: string[], turnTimeLimit: number) => void;
+  setupLocalGame: (
+    playerNames: string[],
+    avatars: string[],
+    turnTimeLimit: number,
+    variant?: GameVariant,
+  ) => void;
   applyLocalMove: (move: GameMove) => boolean;
+  skipLocalChaosTurn: () => void;
   localRematch: () => void;
   resetToLanding: () => void;
   reset: () => void;
 }
 
-const initialState = {
-  phase: 'landing' as AppPhase,
-  gameMode: 'online' as GameMode,
-  playerName: localStorage.getItem('blockus_name') ?? '',
-  playerId: '',
-  playerAvatar: (() => {
-    const stored = localStorage.getItem('blockus_avatar');
-    return stored && (AVATARS as readonly string[]).includes(stored) ? stored : DEFAULT_AVATAR;
-  })(),
-  playerAvatarMap: {} as Record<string, string>,
-  roomId: null,
-  roomCode: null,
-  room: null,
-  players: [],
-  gameState: null,
-  rankings: null,
-  connectionState: 'disconnected' as const,
-  error: null,
-  chatMessages: [] as ChatMessage[],
-};
+function makeInitialState() {
+  const storedAvatar = localStorage.getItem('blockus_avatar');
+  return {
+    phase: 'landing' as AppPhase,
+    gameMode: 'online' as GameMode,
+    gameVariant: 'standard' as GameVariant,
+    playerName: localStorage.getItem('blockus_name') ?? '',
+    playerId: '',
+    playerAvatar:
+      storedAvatar && (AVATARS as readonly string[]).includes(storedAvatar)
+        ? storedAvatar
+        : DEFAULT_AVATAR,
+    playerAvatarMap: {} as Record<string, string>,
+    roomId: null as string | null,
+    roomCode: null as string | null,
+    room: null as Omit<Room, 'gameState'> | null,
+    players: [] as Player[],
+    gameState: null as GameState | null,
+    rankings: null as GameEndPayload['rankings'] | null,
+    connectionState: 'disconnected' as const,
+    error: null as string | null,
+    chatMessages: [] as ChatMessage[],
+  };
+}
 
 const COLORS = ['blue', 'yellow', 'red', 'green'] as const;
 
+function finishGame(state: GameState): {
+  gameState: GameState;
+  rankings: GameEndPayload['rankings'];
+  phase: AppPhase;
+} {
+  const rankings = [...state.players]
+    .sort((a, b) => b.score - a.score)
+    .map((player, i) => ({ player, score: player.score, rank: i + 1 }));
+  return { gameState: state, rankings, phase: 'game_over' };
+}
+
 export const useAppStore = create<AppStore>((set, get) => ({
-  ...initialState,
+  ...makeInitialState(),
 
   setPhase: (phase) => set({ phase }),
 
@@ -113,9 +135,11 @@ export const useAppStore = create<AppStore>((set, get) => ({
       roomCode: room.code,
     }),
 
-  setGameState: (gameState) => set({ gameState, phase: 'game' }),
+  setGameState: (gameState) =>
+    set({ gameState, phase: 'game', gameVariant: gameState.variant ?? 'standard' }),
 
-  setGameEnd: (gameState, rankings) => set({ gameState, rankings, phase: 'game_over' }),
+  setGameEnd: (gameState, rankings) =>
+    set({ gameState, rankings, phase: 'game_over', gameVariant: gameState.variant ?? 'standard' }),
 
   setConnectionState: (connectionState) => set({ connectionState }),
 
@@ -123,7 +147,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   addChatMessage: (message) => set((state) => ({ chatMessages: [...state.chatMessages, message] })),
 
-  setupLocalGame: (playerNames, avatars, turnTimeLimit) => {
+  setupLocalGame: (playerNames, avatars, turnTimeLimit, variant = 'standard') => {
     const players: Player[] = playerNames.map((name, i) => ({
       id: `local-${i}`,
       name,
@@ -136,9 +160,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
     const avatarMap = Object.fromEntries(
       players.map((p, i) => [p.id, avatars[i] ?? DEFAULT_AVATAR]),
     );
-    const gameState = initializeGame(players, turnTimeLimit);
+    const gameState = initializeGame(players, turnTimeLimit, variant);
     set({
       gameMode: 'local',
+      gameVariant: variant,
       players,
       gameState,
       phase: 'game',
@@ -155,10 +180,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       const afterTurn = calculateNextTurn(afterMove);
       if (afterTurn.status === 'finished') {
         const scored = calculateScores(afterTurn);
-        const rankings = [...scored.players]
-          .sort((a, b) => b.score - a.score)
-          .map((player, i) => ({ player, score: player.score, rank: i + 1 }));
-        set({ gameState: scored, rankings, phase: 'game_over' });
+        set(finishGame(scored));
       } else {
         set({ gameState: afterTurn });
       }
@@ -171,17 +193,29 @@ export const useAppStore = create<AppStore>((set, get) => ({
     }
   },
 
+  skipLocalChaosTurn: () => {
+    const { gameState } = get();
+    if (!gameState) return;
+    const next = calculateNextTurn(gameState);
+    if (next.status === 'finished') {
+      set(finishGame(next));
+    } else {
+      set({ gameState: next });
+    }
+  },
+
   localRematch: () => {
-    const { players, playerAvatarMap } = get();
+    const { players, playerAvatarMap, gameVariant } = get();
     if (!players.length) return;
     get().setupLocalGame(
       players.map((p) => p.name),
       players.map((p) => playerAvatarMap[p.id] ?? DEFAULT_AVATAR),
       0,
+      gameVariant,
     );
   },
 
-  resetToLanding: () => set({ ...initialState }),
+  resetToLanding: () => set(makeInitialState()),
 
-  reset: () => set({ ...initialState }),
+  reset: () => set(makeInitialState()),
 }));

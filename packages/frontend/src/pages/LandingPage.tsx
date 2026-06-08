@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '../components/ui/Button';
 import { AvatarPicker } from '../components/ui/AvatarPicker';
 import { GeneratedAvatar } from '../components/ui/GeneratedAvatar';
 import { useAppStore } from '../store/appStore';
 import { connectSocket, emit } from '../socket';
+import type { GameVariant } from '@blockus/shared';
 
 type Mode = 'none' | 'quick2' | 'quick3' | 'quick4' | 'create' | 'join';
 
@@ -115,6 +116,11 @@ export function LandingPage() {
   const [joinCode, setJoinCode] = useState('');
   const [turnLimit, setTurnLimit] = useState(60);
   const [playerCount, setPlayerCount] = useState<2 | 3 | 4>(2);
+  const [createVariant, setCreateVariant] = useState<GameVariant>('standard');
+
+  useEffect(() => {
+    if (createVariant === 'teams') setPlayerCount(4);
+  }, [createVariant]);
 
   const canSubmit = playerName.trim().length >= 2;
 
@@ -133,14 +139,19 @@ export function LandingPage() {
   function handleQuickMatch(count: 2 | 3 | 4) {
     if (!canSubmit) return;
     connect(playerName.trim());
-    emit.joinQueue({ name: playerName.trim(), mode: count });
+    emit.joinQueue({ name: playerName.trim(), maxPlayers: count });
     setPhase('matchmaking');
   }
 
   function handleCreate() {
     if (!canSubmit) return;
     connect(playerName.trim());
-    emit.createRoom({ name: playerName.trim(), mode: playerCount, turnTimeLimit: turnLimit });
+    emit.createRoom({
+      name: playerName.trim(),
+      maxPlayers: playerCount,
+      turnTimeLimit: turnLimit,
+      variant: createVariant,
+    });
   }
 
   function handleJoin() {
@@ -260,24 +271,57 @@ export function LandingPage() {
 
           {mode === 'create' && (
             <div className="flex flex-col gap-4 animate-fade-in">
+              {/* Game mode */}
               <div>
-                <label className="block text-sm font-medium text-[#7b94b9] mb-2">Players</label>
-                <div className="flex gap-2">
-                  {([2, 3, 4] as const).map((n) => (
+                <label className="block text-sm font-medium text-[#7b94b9] mb-2">Mode</label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {(
+                    [
+                      { key: 'standard', label: 'Standard', desc: 'Classic' },
+                      { key: 'chaos', label: 'Chaos', desc: '3 random/turn' },
+                      { key: 'teams', label: 'Teams 2v2', desc: 'Pick & place' },
+                    ] as { key: GameVariant; label: string; desc: string }[]
+                  ).map(({ key, label, desc }) => (
                     <button
-                      key={n}
-                      onClick={() => setPlayerCount(n)}
-                      className={`flex-1 py-2 rounded-lg font-semibold text-sm transition-all active:scale-[0.97] ${
-                        playerCount === n
-                          ? 'bg-accent text-white shadow-lg shadow-accent/20'
-                          : 'bg-surface-2 text-slate-300 hover:text-white'
+                      key={key}
+                      type="button"
+                      onClick={() => setCreateVariant(key)}
+                      className={`flex flex-col items-center py-2.5 px-1 rounded-lg text-center transition-all active:scale-[0.97] ${
+                        createVariant === key
+                          ? 'bg-accent/20 ring-1 ring-accent text-[#eef2ff]'
+                          : 'bg-surface-2 text-slate-400 hover:text-white hover:bg-white/[0.06]'
                       }`}
                     >
-                      {n} Players
+                      <span className="text-xs font-semibold">{label}</span>
+                      <span className="text-[10px] text-[#7b94b9] mt-0.5">{desc}</span>
                     </button>
                   ))}
                 </div>
               </div>
+              {/* Players — hidden when teams forces 4 */}
+              {createVariant !== 'teams' && (
+                <div>
+                  <label className="block text-sm font-medium text-[#7b94b9] mb-2">Players</label>
+                  <div className="flex gap-2">
+                    {([2, 3, 4] as const).map((n) => (
+                      <button
+                        key={n}
+                        onClick={() => setPlayerCount(n)}
+                        className={`flex-1 py-2 rounded-lg font-semibold text-sm transition-all active:scale-[0.97] ${
+                          playerCount === n
+                            ? 'bg-accent text-white shadow-lg shadow-accent/20'
+                            : 'bg-surface-2 text-slate-300 hover:text-white'
+                        }`}
+                      >
+                        {n}P
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {createVariant === 'teams' && (
+                <p className="text-xs text-[#7b94b9] -mt-1">Teams always runs 4 players.</p>
+              )}
               <div>
                 <label className="block text-sm font-medium text-[#7b94b9] mb-2">
                   Turn timer: {turnLimit}s

@@ -1,5 +1,14 @@
 import { PIECE_IDS, PIECE_SHAPES } from './pieces';
-import type { Board, CellState, GameMove, GameState, Player, PlayerColor } from './types';
+import type {
+  Board,
+  CellState,
+  GameMove,
+  GameState,
+  GameVariant,
+  Player,
+  PlayerColor,
+  TeamId,
+} from './types';
 
 const EDGE_DIRECTIONS = [
   [-1, 0],
@@ -126,6 +135,19 @@ function getBoardConfig(players: Player[]): {
   };
 }
 
+function dealChaosHand(player: Player): string[] {
+  const remaining = [...player.remainingPieces];
+  for (let i = remaining.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [remaining[i], remaining[j]] = [remaining[j], remaining[i]];
+  }
+  return remaining.slice(0, Math.min(3, remaining.length));
+}
+
+function buildTeams(players: Player[]): Record<string, TeamId> {
+  return Object.fromEntries(players.map((p, i) => [p.id, (i % 2 === 0 ? 'A' : 'B') as TeamId]));
+}
+
 export function rotatePiece(cells: [number, number][], times: number): [number, number][] {
   const normalizedTimes = ((times % 4) + 4) % 4;
   let transformed = [...cells];
@@ -225,6 +247,13 @@ export function validateMove(
 
   if (!player.remainingPieces.includes(move.pieceId)) {
     return { valid: false, error: 'Piece has already been used.' };
+  }
+
+  // Chaos: may only use one of the three dealt pieces
+  if (gameState.variant === 'chaos' && gameState.dealtPieces) {
+    if (!gameState.dealtPieces.includes(move.pieceId)) {
+      return { valid: false, error: 'You must play one of your dealt pieces.' };
+    }
   }
 
   const transformedCells = getTransformedCells(move.pieceId, move.rotation, move.flipped);
@@ -338,6 +367,8 @@ export function hasAnyLegalMove(player: Player, gameState: GameState): boolean {
               },
               {
                 ...gameState,
+                // Strip chaos dealt-piece restriction for legal-move checks
+                variant: gameState.variant === 'chaos' ? 'standard' : gameState.variant,
                 currentPlayerIndex: gameState.players.findIndex((entry) => entry.id === player.id),
               },
             );
@@ -388,6 +419,8 @@ export function calculateNextTurn(gameState: GameState): GameState {
         currentPlayerIndex: nextIndex,
         turnTimeRemaining: gameState.turnTimeLimit,
         skippedPlayers: Array.from(skippedPlayers),
+        dealtPieces:
+          gameState.variant === 'chaos' ? dealChaosHand(nextPlayer) : gameState.dealtPieces,
       };
     }
 
@@ -403,7 +436,11 @@ export function calculateNextTurn(gameState: GameState): GameState {
   return scoredState;
 }
 
-export function initializeGame(players: Player[], turnTimeLimit: number): GameState {
+export function initializeGame(
+  players: Player[],
+  turnTimeLimit: number,
+  variant: GameVariant = 'standard',
+): GameState {
   const { boardSize, startingCorners, buildCell } = getBoardConfig(players);
 
   const board: Board = Array.from({ length: boardSize }, (_, row) =>
@@ -413,15 +450,17 @@ export function initializeGame(players: Player[], turnTimeLimit: number): GameSt
   const powerUpCount = players.length === 2 ? 4 : 6;
   const powerUpCells = generatePowerUps(board, startingCorners, powerUpCount);
 
+  const initialPlayers = players.map((player) => ({
+    ...player,
+    remainingPieces: [...PIECE_IDS],
+    score: 0,
+    connected: player.connected ?? true,
+    isBot: player.isBot ?? false,
+  }));
+
   return {
     board,
-    players: players.map((player) => ({
-      ...player,
-      remainingPieces: [...PIECE_IDS],
-      score: 0,
-      connected: player.connected ?? true,
-      isBot: player.isBot ?? false,
-    })),
+    players: initialPlayers,
     currentPlayerIndex: 0,
     turnNumber: 1,
     status: 'in_progress',
@@ -432,6 +471,9 @@ export function initializeGame(players: Player[], turnTimeLimit: number): GameSt
     skippedPlayers: [],
     startingCorners,
     powerUpCells,
+    variant,
+    teams: variant === 'teams' ? buildTeams(initialPlayers) : undefined,
+    dealtPieces: variant === 'chaos' ? dealChaosHand(initialPlayers[0]) : undefined,
   };
 }
 

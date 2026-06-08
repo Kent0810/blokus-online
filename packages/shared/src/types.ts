@@ -2,6 +2,9 @@ export type PlayerColor = 'blue' | 'yellow' | 'red' | 'green';
 export type CellState = PlayerColor | 'blocked' | null;
 export type Board = CellState[][];
 
+export type GameVariant = 'standard' | 'teams' | 'chaos';
+export type TeamId = 'A' | 'B';
+
 export interface Player {
   id: string;
   name: string;
@@ -37,6 +40,9 @@ export interface GameState {
   skippedPlayers: Set<string> | string[];
   startingCorners: Partial<Record<PlayerColor, [number, number]>>;
   powerUpCells: [number, number][];
+  variant?: GameVariant;
+  teams?: Record<string, TeamId>;
+  dealtPieces?: string[];
 }
 
 export interface Room {
@@ -44,7 +50,7 @@ export interface Room {
   code: string;
   hostId: string;
   status: RoomStatus;
-  mode: 2 | 3 | 4;
+  maxPlayers: 2 | 3 | 4;
   isPublic: boolean;
   gameState: GameState | null;
   playerIds: string[];
@@ -54,10 +60,11 @@ export interface Room {
 
 export interface JoinQueuePayload {
   readonly name: string;
-  readonly mode: 2 | 3 | 4;
+  readonly maxPlayers: 2 | 3 | 4;
 }
 export interface CreateRoomPayload extends JoinQueuePayload {
   readonly turnTimeLimit: number;
+  readonly variant?: GameVariant;
 }
 export interface JoinRoomPayload {
   name: string;
