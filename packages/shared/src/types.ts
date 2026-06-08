@@ -61,6 +61,7 @@ export interface Room {
 export interface JoinQueuePayload {
   readonly name: string;
   readonly maxPlayers: 2 | 3 | 4;
+  readonly variant?: GameVariant;
 }
 export interface CreateRoomPayload extends JoinQueuePayload {
   readonly turnTimeLimit: number;

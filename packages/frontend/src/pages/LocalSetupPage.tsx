@@ -96,8 +96,10 @@ export function LocalSetupPage() {
     if (variant === 'teams') setPlayerCount(4);
   }, [variant]);
 
+  // Each slot is named after its avatar by default (mirrors the landing page,
+  // where the avatar seed IS the identity). Slot 0 inherits the landing choice.
   const [names, setNames] = useState(() => {
-    const defaults = DEFAULT_NAMES.slice();
+    const defaults = SLOT_DEFAULTS.slice();
     if (playerName.trim()) defaults[0] = playerName.trim();
     return defaults;
   });
@@ -144,9 +146,23 @@ export function LocalSetupPage() {
   }
 
   function handleAvatarChange(playerIndex: number, avatar: string) {
+    const prevAvatar = avatars[playerIndex];
     const updated = [...avatars];
     updated[playerIndex] = avatar;
     setAvatars(updated);
+
+    // Follow the avatar with the name, but only while the name is still "auto" —
+    // i.e. empty, the previous avatar's seed, or the untouched "Player N" default.
+    setNames((prev) => {
+      const current = prev[playerIndex].trim();
+      const isAuto =
+        current === '' || current === prevAvatar || current === DEFAULT_NAMES[playerIndex];
+      if (!isAuto) return prev;
+      const next = [...prev];
+      next[playerIndex] = avatar;
+      return next;
+    });
+
     setOpenPickerIndex(null);
   }
 

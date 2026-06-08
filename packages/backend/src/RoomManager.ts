@@ -11,7 +11,7 @@ export interface RoomEntry {
   variant: GameVariant;
 }
 
-type QueueEntry = { socketId: string; name: string };
+type QueueEntry = { socketId: string; name: string; variant: GameVariant };
 
 export class RoomManager {
   private rooms = new Map<string, RoomEntry>();
@@ -115,14 +115,19 @@ export class RoomManager {
     return entry;
   }
 
-  joinQueue(socketId: string, name: string, maxPlayers: 2 | 3 | 4): RoomEntry | null {
+  joinQueue(
+    socketId: string,
+    name: string,
+    maxPlayers: 2 | 3 | 4,
+    variant: GameVariant = 'standard',
+  ): RoomEntry | null {
     const queue = this.queues.get(maxPlayers) ?? [];
 
     const isDuplicated = queue.find((e) => e.socketId === socketId);
 
     // Don't add duplicates
     if (!isDuplicated) {
-      queue.push({ socketId, name });
+      queue.push({ socketId, name, variant });
       this.queues.set(maxPlayers, queue);
     }
 
@@ -132,9 +137,9 @@ export class RoomManager {
 
       this.queues.set(maxPlayers, queue);
 
-      // Create room with first player as host
+      // Create room with first player as host; host's variant wins
       const [host, ...rest] = matched;
-      const entry = this.createRoom(host.socketId, host.name, maxPlayers);
+      const entry = this.createRoom(host.socketId, host.name, maxPlayers, 120, host.variant);
       entry.room.isPublic = true;
 
       // Join remaining players

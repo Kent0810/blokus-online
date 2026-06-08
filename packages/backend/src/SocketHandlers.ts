@@ -34,9 +34,9 @@ export class SocketHandlers {
 
   private registerHandlers(socket: Socket) {
     // ── join_queue (feature: Quick Play) ────────────────────────────────────────────────────────────── :check-mark:
-    socket.on('join_queue', ({ name, maxPlayers }: JoinQueuePayload) => {
+    socket.on('join_queue', ({ name, maxPlayers, variant }: JoinQueuePayload) => {
       try {
-        const entry = this.roomManager.joinQueue(socket.id, name, maxPlayers);
+        const entry = this.roomManager.joinQueue(socket.id, name, maxPlayers, variant);
 
         if (!entry) {
           socket.emit('queued', {});

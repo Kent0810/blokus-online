@@ -117,6 +117,7 @@ export function LandingPage() {
   const [turnLimit, setTurnLimit] = useState(60);
   const [playerCount, setPlayerCount] = useState<2 | 3 | 4>(2);
   const [createVariant, setCreateVariant] = useState<GameVariant>('standard');
+  const [quickVariant, setQuickVariant] = useState<GameVariant>('standard');
 
   useEffect(() => {
     if (createVariant === 'teams') setPlayerCount(4);
@@ -139,7 +140,7 @@ export function LandingPage() {
   function handleQuickMatch(count: 2 | 3 | 4) {
     if (!canSubmit) return;
     connect(playerName.trim());
-    emit.joinQueue({ name: playerName.trim(), maxPlayers: count });
+    emit.joinQueue({ name: playerName.trim(), maxPlayers: count, variant: quickVariant });
     setPhase('matchmaking');
   }
 
@@ -222,23 +223,53 @@ export function LandingPage() {
 
           {mode === 'none' && (
             <div className="flex flex-col gap-3">
-              {/* Quick match — each button shows its player colors */}
-              <div className="grid grid-cols-3 gap-2">
-                {([2, 3, 4] as const).map((count) => (
-                  <button
-                    key={count}
-                    disabled={!canSubmit}
-                    onClick={() => handleQuickMatch(count)}
-                    className="flex flex-col items-center gap-2 py-3 rounded-xl bg-surface-2 hover:bg-white/[0.08] text-[#eef2ff] font-semibold text-sm transition-all disabled:opacity-35 active:scale-[0.97] border border-white/[0.05] hover:border-accent/30"
-                  >
-                    <div className="flex gap-1 flex-wrap justify-center">
-                      {MODE_COLORS[count].map((c, i) => (
-                        <div key={i} className={`${c} rounded-sm w-3 h-3`} />
-                      ))}
-                    </div>
-                    <span>{count}P</span>
-                  </button>
-                ))}
+              {/* Quick match — variant row + player count */}
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-[#7b94b9]">Quick match</span>
+                  <div className="flex gap-1">
+                    {(
+                      [
+                        { key: 'standard', label: 'Standard' },
+                        { key: 'chaos', label: 'Chaos' },
+                        { key: 'teams', label: 'Teams' },
+                      ] as { key: GameVariant; label: string }[]
+                    ).map(({ key, label }) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setQuickVariant(key)}
+                        className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all ${
+                          quickVariant === key
+                            ? 'bg-accent/20 ring-1 ring-accent/50 text-[#eef2ff]'
+                            : 'text-[#7b94b9] hover:text-[#eef2ff]'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {([2, 3, 4] as const).map((count) => {
+                    const teamsDisabled = quickVariant === 'teams' && count !== 4;
+                    return (
+                      <button
+                        key={count}
+                        disabled={!canSubmit || teamsDisabled}
+                        onClick={() => handleQuickMatch(count)}
+                        className="flex flex-col items-center gap-2 py-3 rounded-xl bg-surface-2 hover:bg-white/[0.08] text-[#eef2ff] font-semibold text-sm transition-all disabled:opacity-25 active:scale-[0.97] border border-white/[0.05] hover:border-accent/30"
+                      >
+                        <div className="flex gap-1 flex-wrap justify-center">
+                          {MODE_COLORS[count].map((c, i) => (
+                            <div key={i} className={`${c} rounded-sm w-3 h-3`} />
+                          ))}
+                        </div>
+                        <span>{count}P</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="flex gap-2">
